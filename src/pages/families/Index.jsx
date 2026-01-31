@@ -15,6 +15,8 @@ import {
   ChevronRight,
   Users,
   Plus,
+  Eye,
+  X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -31,62 +33,50 @@ const FamiliesTable = () => {
   const navigate = useNavigate();
   const [families, setFamilies] = useState([]);
 
-  const onEdit = (family) => {
-    navigate(`/family/${family.id}/edit`);
-  };
+  const onEdit = (family) => navigate(`/family/${family.id}/edit`);
+  const onView = (family) => navigate(`/family/${family.id}`);
+  const onAdd = () => navigate("/family/create");
 
-  const onView = (family) => {
-    navigate(`/family/${family.id}`);
-  };
-
-  const onAdd = () => {
-    navigate("/family/create");
-  };
-
-  const onDelete = (family) => {
+  const onDelete = async (family) => {
     if (window.confirm("Are you sure you want to delete this family?")) {
-      const response = axios.delete(`${Config.apiUrl}families/${family.id}`);
-      if (response.status === 200) {
-        navigate("/family");
-      } else {
-        console.log(response.data);
+      try {
+        const response = await axios.delete(`${Config.apiUrl}families/${family.id}`);
+        if (response.status === 200) {
+          setFamilies(families.filter((f) => f.id !== family.id));
+        }
+      } catch (error) {
+        console.error(error);
       }
     }
   };
+
   const fetchFamilies = async () => {
     const response = await axios.get(`${Config.apiUrl}families`);
     return response.data;
   };
 
   useEffect(() => {
-    fetchFamilies().then((data) => {
-      setFamilies(data);
-    });
+    fetchFamilies().then((data) => setFamilies(data));
   }, []);
 
-  // Process and filter data
   const processedData = useMemo(() => {
     let filtered = families.filter((family) => {
       const matchesSearch =
-        family.family_name.toLowerCase().includes(filter.toLowerCase()) ||
-        family.city.toLowerCase().includes(filter.toLowerCase()) ||
+        family.family_name?.toLowerCase().includes(filter.toLowerCase()) ||
+        family.city?.toLowerCase().includes(filter.toLowerCase()) ||
         family.notes?.toLowerCase().includes(filter.toLowerCase());
 
-      const matchesStatus =
-        statusFilter === "all" || family.status === statusFilter;
-
+      const matchesStatus = statusFilter === "all" || family.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
 
     filtered.sort((a, b) => {
       let aValue = a[sortBy];
       let bValue = b[sortBy];
-
       if (sortBy === "created_at") {
         aValue = new Date(aValue).getTime();
         bValue = new Date(bValue).getTime();
       }
-
       if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
       if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
       return 0;
@@ -105,28 +95,19 @@ const FamiliesTable = () => {
     const config = {
       active: {
         icon: CheckCircle,
-        className: "bg-green-50 text-green-700 border-green-200",
-        iconClass: "text-green-500",
+        className: "bg-success/10 text-success border-success/20",
       },
       inactive: {
         icon: XCircle,
-        className: "bg-red-50 text-red-700 border-red-200",
-        iconClass: "text-red-500",
+        className: "bg-error/10 text-error border-error/20",
       },
     };
-
-    const {
-      icon: Icon,
-      className,
-      iconClass,
-    } = config[status] || config.active;
+    const { icon: Icon, className } = config[status] || config.active;
 
     return (
-      <span
-        className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-medium ${className}`}
-      >
-        <Icon className={`w-3 h-3 mr-1 ${iconClass}`} />
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+      <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-medium ${className}`}>
+        <Icon className="w-3 h-3 mr-1" />
+        {status?.charAt(0).toUpperCase() + status?.slice(1)}
       </span>
     );
   };
@@ -143,93 +124,97 @@ const FamiliesTable = () => {
       }}
       className={`flex items-center justify-center px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
         sortBy === field
-          ? "bg-blue-50 border-blue-200 text-blue-700"
-          : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+          ? "bg-primary/10 border-primary/20 text-primary"
+          : "bg-secondary border-border text-muted-foreground hover:text-foreground hover:bg-secondary/80"
       }`}
     >
       {label}
-      {sortBy === field &&
-        (sortOrder === "asc" ? (
-          <ChevronUp className="w-4 h-4 ml-1" />
-        ) : (
-          <ChevronDown className="w-4 h-4 ml-1" />
-        ))}
+      {sortBy === field && (sortOrder === "asc" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />)}
     </button>
   );
 
   return (
-    <div className="bg-gray-50">
-      {/* Search Bar */}
-      <div className="p-4 bg-white border-b border-gray-200">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center space-x-3">
-            <h2 className="text-lg font-bold text-gray-900">Families</h2>
-            <span className="text-sm text-gray-600">
-              {processedData.length} total
-            </span>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Families</h1>
+          <p className="text-muted-foreground mt-1">{processedData.length} families registered</p>
+        </div>
+        <button
+          onClick={onAdd}
+          className="inline-flex items-center justify-center px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Family
+        </button>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="bg-card border border-border rounded-xl p-4 space-y-4">
+        <div className="flex flex-col lg:flex-row gap-4">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search families..."
+              className="w-full h-10 pl-10 pr-4 bg-secondary border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              value={filter}
+              onChange={(e) => {
+                setFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+            {filter && (
+              <button
+                onClick={() => setFilter("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
-          {/* Add Family Button */}
-          <button
-            onClick={() => {
-              onAdd()
-            }}
-            className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm hover:shadow-md"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Family
-          </button>
-        </div>
-
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <input
-            type="text"
-            placeholder="Search families..."
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
-        </div>
-
-        {/* Quick Filters */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
-          >
-            <Filter className="w-4 h-4 mr-2" />
-            Filters
-          </button>
-
-          <div className="flex space-x-2">
+          {/* Status Filter Buttons */}
+          <div className="flex items-center gap-2">
             {["all", "active", "inactive"].map((status) => (
               <button
                 key={status}
-                onClick={() => setStatusFilter(status)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+                onClick={() => {
+                  setStatusFilter(status);
+                  setCurrentPage(1);
+                }}
+                className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
                   statusFilter === status
                     ? status === "active"
-                      ? "bg-green-100 text-green-700"
+                      ? "bg-success/10 text-success border border-success/20"
                       : status === "inactive"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-blue-100 text-blue-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-error/10 text-error border border-error/20"
+                      : "bg-primary/10 text-primary border border-primary/20"
+                    : "bg-secondary text-muted-foreground hover:text-foreground border border-border"
                 }`}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
               </button>
             ))}
           </div>
+
+          {/* Filter Toggle */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="inline-flex items-center justify-center px-4 py-2 bg-secondary text-muted-foreground hover:text-foreground border border-border rounded-lg text-sm font-medium transition-colors"
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Sort
+          </button>
         </div>
 
         {/* Advanced Filters */}
         {showFilters && (
-          <div className="mt-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
-            <label className="block text-xs font-semibold text-gray-700 mb-2">
-              Sort by
-            </label>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="pt-4 border-t border-border">
+            <p className="text-xs font-medium text-muted-foreground mb-3">Sort by</p>
+            <div className="flex flex-wrap gap-2">
               <SortButton field="family_name" label="Name" />
               <SortButton field="city" label="City" />
               <SortButton field="total_members" label="Members" />
@@ -239,146 +224,206 @@ const FamiliesTable = () => {
         )}
       </div>
 
-      {/* Family Cards */}
-      <div className="p-4 space-y-3">
-        {paginatedData.length > 0 ? (
-          paginatedData.map((family) => (
-            <div
-              key={family.id}
-              className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
-            >
-              {/* Card Header */}
-              <div className="p-3 border-b border-gray-100">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex-1 mr-2">
-                    <h3 className="font-semibold text-gray-900 text-base mb-1">
-                      {family.family_name}
-                    </h3>
-                    <div className="flex items-center text-xs text-gray-500">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {family.city}
+      {/* Desktop Table */}
+      <div className="hidden lg:block bg-card border border-border rounded-xl overflow-hidden">
+        <table className="w-full">
+          <thead className="bg-secondary/50">
+            <tr>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Family</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Location</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Members</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Created</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+              <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {paginatedData.length > 0 ? (
+              paginatedData.map((family) => (
+                <tr key={family.id} className="hover:bg-secondary/30 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                        <Users className="w-5 h-5 text-primary" />
+                      </div>
+                      <span className="font-medium text-foreground">{family.family_name}</span>
                     </div>
-                  </div>
-                  <StatusBadge status={family.status} />
-                </div>
-
-                <div className="flex items-center space-x-4 text-xs text-gray-600">
-                  <div className="flex items-center">
-                    <Users className="w-3.5 h-3.5 mr-1" />
-                    {family.total_members} members
-                  </div>
-                  <div className="flex items-center">
-                    <Calendar className="w-3.5 h-3.5 mr-1" />
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <MapPin className="w-4 h-4" />
+                      <span>{family.city}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-foreground">{family.total_members}</td>
+                  <td className="px-6 py-4 text-muted-foreground">
                     {new Date(family.created_at).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
                     })}
+                  </td>
+                  <td className="px-6 py-4">
+                    <StatusBadge status={family.status} />
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => onView(family)}
+                        className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                        title="View"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => onEdit(family)}
+                        className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                        title="Edit"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => onDelete(family)}
+                        className="p-2 text-muted-foreground hover:text-error hover:bg-error/10 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="px-6 py-12 text-center text-muted-foreground">
+                  No families found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="lg:hidden space-y-3">
+        {paginatedData.length > 0 ? (
+          paginatedData.map((family) => (
+            <div
+              key={family.id}
+              className="bg-card border border-border rounded-xl overflow-hidden"
+            >
+              <div className="p-4 border-b border-border">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                      <Users className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{family.family_name}</h3>
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                        <MapPin className="w-3 h-3" />
+                        {family.city}
+                      </div>
+                    </div>
+                  </div>
+                  <StatusBadge status={family.status} />
+                </div>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Users className="w-4 h-4" />
+                    {family.total_members} members
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4" />
+                    {new Date(family.created_at).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
                   </div>
                 </div>
               </div>
-
-              {/* Action Buttons */}
-              <div className="px-3 py-2 bg-gray-50 flex items-center justify-between">
+              <div className="px-4 py-3 bg-secondary/30 flex items-center justify-between">
                 <button
-                  onClick={() => onView?.(family)}
-                  className="text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                  onClick={() => onView(family)}
+                  className="text-primary text-sm font-medium hover:text-primary/80 transition-colors"
                 >
                   View Details
                 </button>
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center gap-1">
                   <button
-                    onClick={() => onEdit?.(family)}
-                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Edit"
+                    onClick={() => onEdit(family)}
+                    className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => onDelete?.(family)}
-                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Delete"
+                    onClick={() => onDelete(family)}
+                    className="p-2 text-muted-foreground hover:text-error hover:bg-error/10 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
-                  </button>
-                  <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
-                    <MoreVertical className="w-4 h-4" />
                   </button>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
-            <div className="text-gray-400 mb-3 text-sm">No families found</div>
-            <button
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-              onClick={() => {
-                setFilter("");
-                setStatusFilter("all");
-              }}
-            >
-              Clear all filters
-            </button>
+          <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
+            No families found
           </div>
         )}
       </div>
 
-      {/* Pagination - Non-sticky, included in flow */}
+      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="bg-white border-t border-gray-200 p-4 mx-4 mb-4 rounded-xl">
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="flex items-center px-3 py-2 text-sm rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Previous
-            </button>
-
-            <div className="text-xs text-gray-700">
-              Page <span className="font-bold">{currentPage}</span> of{" "}
-              <span className="font-bold">{totalPages}</span>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
+              {Math.min(currentPage * itemsPerPage, processedData.length)} of {processedData.length} families
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 border border-border rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                        currentPage === pageNum
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 border border-border rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </button>
             </div>
-
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className="flex items-center px-3 py-2 text-sm rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-            >
-              Next
-              <ChevronRight className="w-4 h-4 ml-1" />
-            </button>
-          </div>
-
-          {/* Page indicators */}
-          <div className="flex justify-center space-x-2">
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              let pageNum;
-              if (totalPages <= 5) {
-                pageNum = i + 1;
-              } else if (currentPage <= 3) {
-                pageNum = i + 1;
-              } else if (currentPage >= totalPages - 2) {
-                pageNum = totalPages - 4 + i;
-              } else {
-                pageNum = currentPage - 2 + i;
-              }
-
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    currentPage === pageNum ? "bg-blue-500" : "bg-gray-300"
-                  }`}
-                  aria-label={`Go to page ${pageNum}`}
-                />
-              );
-            })}
           </div>
         </div>
       )}

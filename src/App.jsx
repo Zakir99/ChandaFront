@@ -1,6 +1,6 @@
 import "./App.css";
-import { Router, Routes, Route } from "react-router-dom";
-import AppWithMobileLayout from "./components/Layout";
+import { Routes, Route } from "react-router-dom";
+import AppLayout from "./components/Layout";
 
 import { Toaster } from "react-hot-toast";
 
@@ -39,7 +39,7 @@ const App = () => {
         }}
       />
       <Routes>
-        <Route element={<AppWithMobileLayout />}>
+        <Route element={<AppLayout />}>
 
           <Route path="dashboard" element={<DashboardView />} />
           <Route path="unpaid" element={<UnpaidListView />} />
