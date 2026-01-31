@@ -3,11 +3,16 @@ import MobileFooter from "./footer";
 import { Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 
 const AppWithMobileLayout = () => {
   const user = useSelector((state) => state.auth.user);
+  const { isDark } = useTheme();
+  
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors ${
+      isDark ? 'bg-slate-950' : 'bg-gray-50'
+    }`}>
       <MobileHeader />
       <div>
         {user ?? (

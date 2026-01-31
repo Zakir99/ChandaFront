@@ -16,7 +16,9 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Config from "../../Js/Config";
 import toast from "react-hot-toast";
+import { useTheme } from "../../context/ThemeContext";
 const MonthlyRegisters = () => {
+  const { isDark } = useTheme();
   const [registers, setRegisters] = useState([]);
   const [currentView, setCurrentView] = useState("list");
   const [families, setFamilies] = useState([]);
@@ -172,20 +174,20 @@ const MonthlyRegisters = () => {
   // LIST VIEW
   if (currentView === "list") {
     return (
-      <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6">
+      <div className={`min-h-screen p-3 sm:p-4 md:p-6 ${isDark ? 'bg-slate-950' : 'bg-gray-50'}`}>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-4 sm:mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
+            <h1 className={`text-2xl sm:text-3xl font-bold mb-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
               Monthly Registers
             </h1>
-            <p className="text-sm text-gray-600">
+            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
               Manage monthly payment records
             </p>
           </div>
 
           {/* Search and Create Button */}
-          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 mb-4">
+          <div className={`rounded-lg shadow-sm p-3 sm:p-4 mb-4 ${isDark ? 'bg-slate-900 border border-slate-700' : 'bg-white'}`}>
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />

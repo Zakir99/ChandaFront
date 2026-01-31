@@ -20,8 +20,10 @@ import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import generatePDF from "../../components/supportPdf";
 import toast from "react-hot-toast";
+import { useTheme } from "../../context/ThemeContext";
 
 const DeathSupportView = () => {
+  const { isDark } = useTheme();
   const [record, setRecord] = useState([]);
   const [families, setFamilies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,7 +130,7 @@ const DeathSupportView = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className={`flex justify-center items-center h-screen ${isDark ? 'bg-slate-950' : ''}`}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
@@ -136,15 +138,15 @@ const DeathSupportView = () => {
 
   if (!record) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
+      <div className={`min-h-screen p-4 ${isDark ? 'bg-slate-950' : 'bg-gray-50'}`}>
         <div className="max-w-4xl mx-auto text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <XCircle size={32} className="text-gray-400" />
+          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${isDark ? 'bg-slate-800' : 'bg-gray-100'}`}>
+            <XCircle size={32} className={isDark ? 'text-slate-500' : 'text-gray-400'} />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
+          <h2 className={`text-xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
             Record not found
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
             The requested death support record does not exist.
           </p>
           <button
@@ -175,9 +177,9 @@ const DeathSupportView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className={`min-h-screen pb-20 ${isDark ? 'bg-slate-950' : 'bg-gray-50'}`}>
       {/* Header */}
-      <div className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-4 py-6 sticky top-0 z-10 shadow-lg">
+      <div className={`text-white px-4 py-6 sticky top-0 z-10 shadow-lg ${isDark ? 'bg-gradient-to-r from-slate-800 to-slate-900' : 'bg-gradient-to-r from-blue-600 to-blue-700'}`}>
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => window.history.back()}

@@ -19,8 +19,10 @@ import {
 import Config from "../../Js/Config";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useTheme } from "../../context/ThemeContext";
 
 const DeathSupportIndex = () => {
+  const { isDark } = useTheme();
   const [deathSupports, setDeathSupports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -89,30 +91,30 @@ const DeathSupportIndex = () => {
   const stats = getTotalStats();
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className={`min-h-screen pb-20 ${isDark ? 'bg-slate-950' : 'bg-gray-50'}`}>
       {/* Header */}
-      <div className="bg-linear-to-r from-blue-600 to-blue-700 text-white px-4 py-6 sticky top-0 z-10 shadow-lg">
+      <div className={`text-white px-4 py-6 sticky top-0 z-10 shadow-lg ${isDark ? 'bg-gradient-to-r from-slate-800 to-slate-900' : 'bg-gradient-to-r from-blue-600 to-blue-700'}`}>
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold mb-1">Death Supports</h1>
-          <p className="text-blue-100 text-sm">Manage support records</p>
+          <p className={isDark ? 'text-slate-300 text-sm' : 'text-blue-100 text-sm'}>Manage support records</p>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-4 space-y-4">
         {/* Stats Cards */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="bg-white rounded-lg p-3 shadow-sm">
-            <div className="text-xs text-gray-500 mb-1">Total</div>
-            <div className="text-lg font-bold text-gray-900">
+          <div className={`rounded-lg p-3 shadow-sm ${isDark ? 'bg-slate-900 border border-slate-700' : 'bg-white'}`}>
+            <div className={`text-xs mb-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Total</div>
+            <div className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
               {filteredData.length}
             </div>
           </div>
-          <div className="bg-white rounded-lg p-3 shadow-sm">
-            <div className="text-xs text-gray-500 mb-1">Paid</div>
+          <div className={`rounded-lg p-3 shadow-sm ${isDark ? 'bg-slate-900 border border-slate-700' : 'bg-white'}`}>
+            <div className={`text-xs mb-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Paid</div>
             <div className="text-lg font-bold text-green-600">{stats.paid}</div>
           </div>
-          <div className="bg-white rounded-lg p-3 shadow-sm">
-            <div className="text-xs text-gray-500 mb-1">Pending</div>
+          <div className={`rounded-lg p-3 shadow-sm ${isDark ? 'bg-slate-900 border border-slate-700' : 'bg-white'}`}>
+            <div className={`text-xs mb-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Pending</div>
             <div className="text-lg font-bold text-orange-600">
               {stats.pending}
             </div>
@@ -122,13 +124,17 @@ const DeathSupportIndex = () => {
         {/* Search Bar */}
         <div className="relative">
           <Search
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}
             size={20}
           />
           <input
             type="text"
             placeholder="Search by name or relationship..."
-            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm"
+            className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm ${
+              isDark 
+                ? 'bg-slate-900 border-slate-700 text-white placeholder:text-slate-500' 
+                : 'bg-white border-gray-200'
+            }`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
