@@ -14,6 +14,7 @@ import {
   Search,
   Settings,
   LogOut,
+  MessageSquare
 } from "lucide-react";
 
 const navItems = [
@@ -22,6 +23,7 @@ const navItems = [
   { icon: UserCircle, label: "Members", id: "member", path: "/member" },
   { icon: BookOpen, label: "Registers", id: "register", path: "/register" },
   { icon: Heart, label: "Support", id: "support", path: "/support" },
+  { icon: MessageSquare, label: "Messages", id: "message", path: "/message"},
 ];
 
 const Sidebar = ({ isOpen, onClose }) => {

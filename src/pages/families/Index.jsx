@@ -17,10 +17,12 @@ import {
   Plus,
   Eye,
   X,
+  Phone,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Config from "../../Js/Config";
+import Swal from "sweetalert2";
 
 const FamiliesTable = () => {
   const [filter, setFilter] = useState("");
@@ -38,9 +40,22 @@ const FamiliesTable = () => {
   const onAdd = () => navigate("/family/create");
 
   const onDelete = async (family) => {
-    if (window.confirm("Are you sure you want to delete this family?")) {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+      background: "#000000",
+    });
+
+    if (result.isConfirmed) {
       try {
-        const response = await axios.delete(`${Config.apiUrl}families/${family.id}`);
+        const response = await axios.delete(
+          `${Config.apiUrl}families/${family.id}`,
+        );
         if (response.status === 200) {
           setFamilies(families.filter((f) => f.id !== family.id));
         }
@@ -66,7 +81,8 @@ const FamiliesTable = () => {
         family.city?.toLowerCase().includes(filter.toLowerCase()) ||
         family.notes?.toLowerCase().includes(filter.toLowerCase());
 
-      const matchesStatus = statusFilter === "all" || family.status === statusFilter;
+      const matchesStatus =
+        statusFilter === "all" || family.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
 
@@ -88,7 +104,7 @@ const FamiliesTable = () => {
   const totalPages = Math.ceil(processedData.length / itemsPerPage);
   const paginatedData = processedData.slice(
     (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+    currentPage * itemsPerPage,
   );
 
   const StatusBadge = ({ status }) => {
@@ -105,7 +121,9 @@ const FamiliesTable = () => {
     const { icon: Icon, className } = config[status] || config.active;
 
     return (
-      <span className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-medium ${className}`}>
+      <span
+        className={`inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-medium ${className}`}
+      >
         <Icon className="w-3 h-3 mr-1" />
         {status?.charAt(0).toUpperCase() + status?.slice(1)}
       </span>
@@ -129,7 +147,12 @@ const FamiliesTable = () => {
       }`}
     >
       {label}
-      {sortBy === field && (sortOrder === "asc" ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />)}
+      {sortBy === field &&
+        (sortOrder === "asc" ? (
+          <ChevronUp className="w-4 h-4 ml-1" />
+        ) : (
+          <ChevronDown className="w-4 h-4 ml-1" />
+        ))}
     </button>
   );
 
@@ -138,8 +161,12 @@ const FamiliesTable = () => {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Families</h1>
-          <p className="text-muted-foreground mt-1">{processedData.length} families registered</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
+            Families
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {processedData.length} families registered
+          </p>
         </div>
         <button
           onClick={onAdd}
@@ -190,8 +217,8 @@ const FamiliesTable = () => {
                     ? status === "active"
                       ? "bg-success/10 text-success border border-success/20"
                       : status === "inactive"
-                      ? "bg-error/10 text-error border border-error/20"
-                      : "bg-primary/10 text-primary border border-primary/20"
+                        ? "bg-error/10 text-error border border-error/20"
+                        : "bg-primary/10 text-primary border border-primary/20"
                     : "bg-secondary text-muted-foreground hover:text-foreground border border-border"
                 }`}
               >
@@ -213,7 +240,9 @@ const FamiliesTable = () => {
         {/* Advanced Filters */}
         {showFilters && (
           <div className="pt-4 border-t border-border">
-            <p className="text-xs font-medium text-muted-foreground mb-3">Sort by</p>
+            <p className="text-xs font-medium text-muted-foreground mb-3">
+              Sort by
+            </p>
             <div className="flex flex-wrap gap-2">
               <SortButton field="family_name" label="Name" />
               <SortButton field="city" label="City" />
@@ -229,40 +258,49 @@ const FamiliesTable = () => {
         <table className="w-full">
           <thead className="bg-secondary/50">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Family</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Location</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Members</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Created</th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-              <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Family
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Phone
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Members
+              </th>
+              <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {paginatedData.length > 0 ? (
               paginatedData.map((family) => (
-                <tr key={family.id} className="hover:bg-secondary/30 transition-colors">
+                <tr
+                  key={family.id}
+                  className="hover:bg-secondary/30 transition-colors"
+                >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
                         <Users className="w-5 h-5 text-primary" />
                       </div>
-                      <span className="font-medium text-foreground">{family.family_name}</span>
+                      <span className="font-medium text-foreground">
+                        {family.family_name}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <MapPin className="w-4 h-4" />
-                      <span>{family.city}</span>
+                     {family.phone ?? '-'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-foreground">{family.total_members}</td>
-                  <td className="px-6 py-4 text-muted-foreground">
-                    {new Date(family.created_at).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+                  <td className="px-6 py-4 text-foreground">
+                    {family.total_members}
                   </td>
+                 
                   <td className="px-6 py-4">
                     <StatusBadge status={family.status} />
                   </td>
@@ -295,7 +333,10 @@ const FamiliesTable = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="px-6 py-12 text-center text-muted-foreground">
+                <td
+                  colSpan="6"
+                  className="px-6 py-12 text-center text-muted-foreground"
+                >
                   No families found
                 </td>
               </tr>
@@ -319,7 +360,9 @@ const FamiliesTable = () => {
                       <Users className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-foreground">{family.family_name}</h3>
+                      <h3 className="font-semibold text-foreground">
+                        {family.family_name}
+                      </h3>
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
                         <MapPin className="w-3 h-3" />
                         {family.city}
@@ -379,7 +422,8 @@ const FamiliesTable = () => {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
               Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-              {Math.min(currentPage * itemsPerPage, processedData.length)} of {processedData.length} families
+              {Math.min(currentPage * itemsPerPage, processedData.length)} of{" "}
+              {processedData.length} families
             </p>
             <div className="flex items-center gap-2">
               <button
@@ -417,7 +461,9 @@ const FamiliesTable = () => {
                 })}
               </div>
               <button
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
                 className="p-2 border border-border rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >

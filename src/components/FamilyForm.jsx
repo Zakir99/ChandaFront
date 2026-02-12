@@ -50,12 +50,12 @@ const InputField = ({
   );
 };
 
-const FamilyForm = ({ onSave, family }) => {
+const   FamilyForm = ({ onSave, family }) => {
   const isEdit = !!family;
   const initialState = {
     family_name: "",
     city: "",
-    head_member_id: "",
+    phone: "",
     status: "active",
     notes: "",
     total_members: "",
@@ -77,7 +77,7 @@ const FamilyForm = ({ onSave, family }) => {
       setFormData({
         family_name: family.family_name ?? "",
         city: family.city ?? "",
-        head_member_id: family.head_member_id ?? "",
+        phone: family.phone ?? "",
         status: family.status ?? "active",
         notes: family.notes ?? "",
         total_members: family.total_members ?? "",
@@ -94,8 +94,8 @@ const FamilyForm = ({ onSave, family }) => {
     if (formData.total_members && isNaN(formData.total_members)) {
       newErrors.total_members = "Must be a valid number";
     }
-    if (formData.head_member_id && isNaN(formData.head_member_id)) {
-      newErrors.head_member_id = "Must be a valid number";
+    if (formData.phone && isNaN(formData.phone)) {
+      newErrors.phone = "Must be a valid number";
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -107,7 +107,7 @@ const FamilyForm = ({ onSave, family }) => {
       const submitData = {
         ...formData,
         total_members: formData.total_members ? parseInt(formData.total_members) : null,
-        head_member_id: formData.head_member_id ? parseInt(formData.head_member_id) : null,
+        phone: formData.phone ? parseInt(formData.phone) : null,
       };
       onSave(submitData);
     }
@@ -174,13 +174,13 @@ const FamilyForm = ({ onSave, family }) => {
             />
 
             <InputField
-              label="Head Member ID"
+              label="Phone Number"
               type="number"
-              placeholder="Optional"
+              placeholder="Enter Phone Number"
               icon={User}
-              value={formData.head_member_id}
-              error={errors.head_member_id}
-              onChange={(e) => handleChange("head_member_id", e.target.value)}
+              value={formData.phone}
+              error={errors.phone}
+              onChange={(e) => handleChange("phone", e.target.value)}
             />
           </div>
         </div>

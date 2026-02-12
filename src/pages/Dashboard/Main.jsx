@@ -128,7 +128,7 @@ export default function DashboardView() {
             </div>
             <div className="h-3 bg-secondary rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-primary to-success rounded-full transition-all duration-700"
+                className="h-full bg-linear-to-r from-primary to-success rounded-full transition-all duration-700"
                 style={{ width: `${Math.min(collectionPercentage || 0, 100)}%` }}
               />
             </div>
@@ -158,9 +158,9 @@ export default function DashboardView() {
         </div>
 
         {/* Alert Card */}
-        <div className="bg-gradient-to-br from-error/20 to-error/5 border border-error/20 rounded-xl p-6">
+        <div className="bg-linear-to-br from-error/20 to-error/5 border border-error/20 rounded-xl p-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-error/20 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 bg-error/20 rounded-xl flex items-center justify-center shrink-0">
               <AlertCircle className="w-6 h-6 text-error" />
             </div>
             <div className="flex-1 min-w-0">

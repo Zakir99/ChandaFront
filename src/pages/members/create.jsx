@@ -1,9 +1,18 @@
-import { ChevronLeft, Plus, Phone, User, Users, Calendar, Shield, Save } from "lucide-react";
+import {
+  ChevronLeft,
+  Plus,
+  Phone,
+  User,
+  Users,
+  Calendar,
+  Shield,
+  Save,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Config from "../../Js/Config";
-import toast from "react-hot-toast";
+import { toast } from "react-toastify";
 
 const CreateMember = () => {
   const [families, setFamilies] = useState([]);
@@ -33,7 +42,8 @@ const CreateMember = () => {
   const validate = () => {
     const newErrors = {};
     if (!formData.family_id) newErrors.family_id = "Please select a family";
-    if (!formData.full_name.trim()) newErrors.full_name = "Full name is required";
+    if (!formData.full_name.trim())
+      newErrors.full_name = "Full name is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -44,10 +54,13 @@ const CreateMember = () => {
 
     try {
       const response = await axios.post(`${Config.apiUrl}members`, formData);
-      if (response.status === 201) {
-        toast.success("Member created successfully");
-        navigate("/member");
-      }
+      toast.success("Member created successfully");
+
+      navigate("/member", {
+        state: {
+          member: response.data,
+        },
+      });
     } catch (error) {
       console.error(error);
       toast.error("Failed to create member");
@@ -69,7 +82,9 @@ const CreateMember = () => {
             <Plus className="w-6 h-6 text-primary" />
             Add New Member
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">Fill in the details to create a new member</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            Fill in the details to create a new member
+          </p>
         </div>
       </div>
 
@@ -79,7 +94,9 @@ const CreateMember = () => {
         <div className="bg-card border border-border rounded-xl p-6 space-y-5">
           <div className="flex items-center gap-2 mb-2">
             <User className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-semibold text-foreground">Basic Information</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              Basic Information
+            </h2>
           </div>
 
           <div>
@@ -107,7 +124,9 @@ const CreateMember = () => {
                 ))}
               </select>
             </div>
-            {errors.family_id && <p className="mt-2 text-xs text-error">{errors.family_id}</p>}
+            {errors.family_id && (
+              <p className="mt-2 text-xs text-error">{errors.family_id}</p>
+            )}
           </div>
 
           <div>
@@ -130,17 +149,23 @@ const CreateMember = () => {
                 placeholder="Enter full name"
               />
             </div>
-            {errors.full_name && <p className="mt-2 text-xs text-error">{errors.full_name}</p>}
+            {errors.full_name && (
+              <p className="mt-2 text-xs text-error">{errors.full_name}</p>
+            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Phone</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Phone
+            </label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="tel"
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, phone: e.target.value })
+                }
                 className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring text-sm text-foreground placeholder:text-muted-foreground"
                 placeholder="+1234567890"
               />
@@ -152,15 +177,21 @@ const CreateMember = () => {
         <div className="bg-card border border-border rounded-xl p-6 space-y-5">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="w-4 h-4 text-primary" />
-            <h2 className="text-sm font-semibold text-foreground">Role & Status</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              Role & Status
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Role</label>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Role
+              </label>
               <select
                 value={formData.role}
-                onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, role: e.target.value })
+                }
                 className="w-full px-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring text-sm text-foreground appearance-none"
               >
                 <option value="member">Member</option>
@@ -170,10 +201,14 @@ const CreateMember = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Status</label>
+              <label className="block text-sm font-medium text-foreground mb-2">
+                Status
+              </label>
               <select
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
                 className="w-full px-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring text-sm text-foreground appearance-none"
               >
                 <option value="active">Active</option>
@@ -184,13 +219,17 @@ const CreateMember = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-foreground mb-2">Join Date</label>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Join Date
+            </label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <input
                 type="date"
                 value={formData.join_date}
-                onChange={(e) => setFormData({ ...formData, join_date: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, join_date: e.target.value })
+                }
                 className="w-full pl-10 pr-4 py-3 bg-secondary border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring text-sm text-foreground"
               />
             </div>

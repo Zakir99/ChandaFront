@@ -2,7 +2,8 @@ import "./App.css";
 import { Routes, Route } from "react-router-dom";
 import AppLayout from "./components/Layout";
 
-import { Toaster } from "react-hot-toast";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 import DashboardView from "./pages/Dashboard/Main";
 import UnpaidListView from "./pages/Dashboard/unpaidFamilies";
@@ -17,30 +18,32 @@ import ViewMember from "./pages/members/view";
 import CreateMember from "./pages/members/create";
 import EditMember from "./pages/members/edit";
 
-import MonthlyRegisters from './pages/register/index'
+import MonthlyRegisters from "./pages/register/index";
 import MonthlyRegistersView from "./pages/register/view";
 
-
 import DeathSupportIndex from "./pages/support/index";
-import DeathSupportCreate from "./pages/support/create"; 
+import DeathSupportCreate from "./pages/support/create";
 import DeathSupportView from "./pages/support/view";
 import DeathSupportEdit from "./pages/support/edit";
+import WhatsAppMessenger from "./pages/Messages/Main";
 
 const App = () => {
   return (
     <>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            fontSize: "14px",
-          },
-        }}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        style={{ fontSize: "14px" }}
       />
       <Routes>
         <Route element={<AppLayout />}>
-
           <Route path="dashboard" element={<DashboardView />} />
           <Route path="unpaid" element={<UnpaidListView />} />
 
@@ -56,18 +59,15 @@ const App = () => {
 
           <Route path="register" element={<MonthlyRegisters />} />
           <Route path="register/:id" element={<MonthlyRegistersView />} />
-          
+
           <Route path="support" element={<DeathSupportIndex />} />
           <Route path="support/create" element={<DeathSupportCreate />} />
           <Route path="support/:id" element={<DeathSupportView />} />
           <Route path="support/:id/edit" element={<DeathSupportEdit />} />
 
-
+          <Route path="message" element={<WhatsAppMessenger />} />
           <Route path="*" element={<div>404</div>} />
-
-
         </Route>
-
       </Routes>
     </>
   );
