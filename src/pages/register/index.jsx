@@ -18,13 +18,16 @@ import axios from "axios";
 import Config from "../../Js/Config";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import YearlyRegisterRedesigned from "../../components/yearlyTable";
 
 const MonthlyRegisters = () => {
   const [registers, setRegisters] = useState([]);
   const [currentView, setCurrentView] = useState("list");
+  const [isYearly, setIsYearly] = useState(false);
   const [families, setFamilies] = useState([]);
   const [editingRegister, setEditingRegister] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [yearRegisters, setYearRegisters] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
   const [formData, setFormData] = useState({
@@ -144,6 +147,19 @@ const MonthlyRegisters = () => {
     }
   };
 
+  const goToSendMessage = async () => {
+    
+    try {
+      const response = await axios.post(`${Config.apiUrl}message/sendRegisterMessage`);
+
+      if (response.status === 200) {
+        toast.success("Message sent successfully!");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleDelete = async (id) => {
     const result = await Swal.fire({
       title: "Are you sure?",
@@ -182,7 +198,6 @@ const MonthlyRegisters = () => {
     indexOfLastItem,
   );
   const totalPages = Math.ceil(filteredRegisters.length / itemsPerPage);
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-PK", {
       style: "currency",
@@ -197,6 +212,47 @@ const MonthlyRegisters = () => {
       day: "numeric",
     });
   };
+  const groupedByYear = filteredRegisters.reduce((acc, register) => {
+    const year = register.year;
+
+    if (!acc[year]) {
+      acc[year] = {
+        year,
+        registers: [],
+        total_expected: 0,
+        total_collected: 0,
+        total_remaining: 0,
+      };
+    }
+
+    acc[year].registers.push(register);
+
+    // optional yearly totals
+    acc[year].total_expected += Number(register.expected_amount || 0);
+    acc[year].total_collected += Number(register.collected_amount || 0);
+    acc[year].total_remaining += Number(register.remaining_amount || 0);
+
+    return acc;
+  }, {});
+
+  const yearlyData = Object.values(groupedByYear);
+  const totalYearlyPages = Math.ceil(yearlyData.length / itemsPerPage);
+
+  const currentYearlyItems = yearlyData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+  const activeTotalPages = isYearly ? totalYearlyPages : totalPages;
+  const activeTotalItems = isYearly
+    ? yearlyData.length
+    : filteredRegisters.length;
+  const activeFirstItem = isYearly
+    ? (currentPage - 1) * itemsPerPage + 1
+    : indexOfFirstItem + 1;
+
+  const activeLastItem = isYearly
+    ? Math.min(currentPage * itemsPerPage, yearlyData.length)
+    : Math.min(indexOfLastItem, filteredRegisters.length);
 
   // LIST VIEW
   if (currentView === "list") {
@@ -205,25 +261,35 @@ const MonthlyRegisters = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-foreground">
-              Monthly Registers
+            <h1 className="text-2xl font-bold text-foreground">
+              {isYearly ? "Yearly Registers" : "Monthly Registers"}
             </h1>
-            <p className="text-muted-foreground mt-1">
-              Manage monthly payment records
+            <p className="text-sm text-muted-foreground mt-1">
+              {isYearly
+                ? "Manage and track your yearly contribution registers"
+                : "Manage and track your monthly contribution registers"}
             </p>
           </div>
-          <button
-            onClick={goToCreate}
-            className="inline-flex items-center justify-center px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Register
-          </button>
+          <div className="space-x-4">
+            <button
+              onClick={goToCreate}
+              className="inline-flex items-center justify-center px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              New Register
+            </button>
+            <button
+              onClick={goToSendMessage}
+              className="inline-flex items-center justify-center px-4 py-2.5 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              Send Message
+            </button>
+          </div>
         </div>
 
         {/* Search */}
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="relative">
+        <div className="bg-card border border-border rounded-xl p-4 flex space-x-4">
+          <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
@@ -244,224 +310,291 @@ const MonthlyRegisters = () => {
               </button>
             )}
           </div>
+          <div className="inline-flex bg-secondary rounded-xl border-gray-50">
+            <button
+              onClick={() => setIsYearly(false)}
+              className={`
+      flex items-center px-4 py-2 rounded-lg font-medium text-sm
+      transition-all duration-200  cursor-pointer
+      ${
+        !isYearly
+          ? "bg-card text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground"
+      }
+    `}
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              Monthly
+            </button>
+            <button
+              onClick={() => setIsYearly(true)}
+              className={`
+                            flex items-center px-4 py-2 rounded-lg font-medium text-sm
+                            transition-all duration-200  cursor-pointer
+                            ${
+                              isYearly
+                                ? "bg-card text-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                            }
+                          `}
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              Yearly
+            </button>
+          </div>
         </div>
 
-        {/* Desktop Table */}
-        <div className="hidden lg:block bg-card border border-border rounded-xl overflow-hidden">
-          {currentItems.length === 0 ? (
-            <div className="text-center py-12">
-              <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-              <p className="text-muted-foreground">No registers found</p>
-            </div>
-          ) : (
-            <table className="w-full">
-              <thead className="bg-secondary/50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Period
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Collected
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Remaining
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Members
-                  </th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {currentItems.map((register) => (
-                  <tr
-                    key={register.id}
-                    className="hover:bg-secondary/30 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <span className="font-medium text-foreground">
-                        {register.month?.charAt(0).toUpperCase() +
-                          register.month?.slice(1)}{" "}
-                        {register.year}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground">
-                      {formatDate(register.date)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-success font-semibold">
-                        {formatCurrency(register.amount_per_member)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-foreground">
-                        {formatCurrency(register.collected_amount)}
-                      </div>
-                      {/* <div className="text-xs text-muted-foreground">
+        {isYearly === false ? (
+          <>
+            {/* Desktop Table */}
+            <div className="hidden lg:block bg-card border border-border rounded-xl overflow-hidden">
+              {currentItems.length === 0 ? (
+                <div className="text-center py-12">
+                  <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                  <p className="text-muted-foreground">No registers found</p>
+                </div>
+              ) : (
+                <table className="w-full">
+                  <thead className="bg-secondary/50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Period
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Amount
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Collected
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Remaining
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Members
+                      </th>
+                      <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {currentItems.map((register) => (
+                      <tr
+                        key={register.id}
+                        className="hover:bg-secondary/30 transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <span className="font-medium text-foreground">
+                            {register.month?.charAt(0).toUpperCase() +
+                              register.month?.slice(1)}{" "}
+                            {register.year}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-muted-foreground">
+                          {formatDate(register.date)}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-success font-semibold">
+                            {formatCurrency(register.amount_per_member)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-foreground">
+                            {formatCurrency(register.collected_amount)}
+                          </div>
+                          {/* <div className="text-xs text-muted-foreground">
                         {register.past_month_paid_number} paid
                       </div> */}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-foreground">
-                        {formatCurrency(register.remaining_amount)}
-                      </div>
-                      {/* <div className="text-xs text-muted-foreground">
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-red-500">
+                            {formatCurrency(register.remaining_amount)}
+                          </div>
+                          {/* <div className="text-xs text-muted-foreground">
                         {register.remaining_number} remaining
                       </div> */}
-                    </td>
-                    <td className="px-6 py-4 text-foreground">
-                      {register.total_members}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => navigate(`/register/${register.id}`)}
-                          className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => goToEdit(register)}
-                          className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(register.id)}
-                          className="p-2 text-muted-foreground hover:text-error hover:bg-error/10 rounded-lg transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-
-        {/* Mobile Cards */}
-        <div className="lg:hidden space-y-3">
-          {currentItems.length === 0 ? (
-            <div className="bg-card border border-border rounded-xl p-8 text-center">
-              <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-              <p className="text-muted-foreground">No registers found</p>
+                        </td>
+                        <td className="px-6 py-4 text-foreground">
+                          {register.total_members}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() =>
+                                navigate(`/register/${register.id}`)
+                              }
+                              className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => goToEdit(register)}
+                              className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(register.id)}
+                              className="p-2 text-muted-foreground hover:text-error hover:bg-error/10 rounded-lg transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
             </div>
-          ) : (
-            currentItems.map((register) => (
-              <div
-                key={register.id}
-                className="bg-card border border-border rounded-xl overflow-hidden"
-              >
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold text-foreground">
-                        {register.month?.charAt(0).toUpperCase() +
-                          register.month?.slice(1)}{" "}
-                        {register.year}
-                      </h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {formatDate(register.date)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => navigate(`/register/${register.id}`)}
-                        className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => goToEdit(register)}
-                        className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(register.id)}
-                        className="p-2 text-muted-foreground hover:text-error hover:bg-error/10 rounded-lg"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+
+            {/* Mobile Cards */}
+            <div className="lg:hidden space-y-3">
+              {currentItems.length === 0 ? (
+                <div className="bg-card border border-border rounded-xl p-8 text-center">
+                  <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+                  <p className="text-muted-foreground">No registers found</p>
+                </div>
+              ) : (
+                currentItems.map((register) => (
+                  <div
+                    key={register.id}
+                    className="bg-card border border-border rounded-xl overflow-hidden"
+                  >
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="font-semibold text-foreground">
+                            {register.month?.charAt(0).toUpperCase() +
+                              register.month?.slice(1)}{" "}
+                            {register.year}
+                          </h3>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {formatDate(register.date)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => navigate(`/register/${register.id}`)}
+                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => goToEdit(register)}
+                            className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-lg"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(register.id)}
+                            className="p-2 text-muted-foreground hover:text-error hover:bg-error/10 rounded-lg"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-success/10 rounded-lg p-2 text-center">
+                          <p className="text-xs text-success font-medium">
+                            Per Member
+                          </p>
+                          <p className="font-semibold text-success text-sm mt-0.5">
+                            {formatCurrency(register.amount_per_member)}
+                          </p>
+                        </div>
+                        <div className="bg-primary/10 rounded-lg p-2 text-center">
+                          <p className="text-xs text-primary font-medium">
+                            Members
+                          </p>
+                          <p className="font-semibold text-primary text-sm mt-0.5">
+                            {register.total_members}
+                          </p>
+                        </div>
+                        <div className="bg-warning/10 rounded-lg p-2 text-center">
+                          <p className="text-xs text-warning font-medium">
+                            Collected
+                          </p>
+                          <p className="font-semibold text-warning text-sm mt-0.5">
+                            {formatCurrency(register.completed_amount)}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-success/10 rounded-lg p-2 text-center">
-                      <p className="text-xs text-success font-medium">
-                        Per Member
-                      </p>
-                      <p className="font-semibold text-success text-sm mt-0.5">
-                        {formatCurrency(register.amount_per_member)}
-                      </p>
-                    </div>
-                    <div className="bg-primary/10 rounded-lg p-2 text-center">
-                      <p className="text-xs text-primary font-medium">
-                        Members
-                      </p>
-                      <p className="font-semibold text-primary text-sm mt-0.5">
-                        {register.total_members}
-                      </p>
-                    </div>
-                    <div className="bg-warning/10 rounded-lg p-2 text-center">
-                      <p className="text-xs text-warning font-medium">
-                        Collected
-                      </p>
-                      <p className="font-semibold text-warning text-sm mt-0.5">
-                        {formatCurrency(register.completed_amount)}
-                      </p>
-                    </div>
+                ))
+              )}
+            </div>
+
+            {totalPages > 1 && (
+              <div className="bg-card border border-border rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {indexOfFirstItem + 1} to{" "}
+                    {Math.min(indexOfLastItem, filteredRegisters.length)} of{" "}
+                    {filteredRegisters.length}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
+                      disabled={currentPage === 1}
+                      className="p-2 border border-border rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                    <span className="text-sm text-foreground px-2">
+                      {currentPage} / {totalPages}
+                    </span>
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
+                      disabled={currentPage === totalPages}
+                      className="p-2 border border-border rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </button>
                   </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            )}
+          </>
+        ) : (
+          <>
+            <YearlyRegisterRedesigned
+              yearlyData={yearlyData}
+              currentItems={currentYearlyItems}
+              itemsPerPage={itemsPerPage}
+              currentPage={currentPage}
+              setCurrentPage={setCurrentPage}
+              totalItems={yearlyData.length}
+              indexOfFirstItem={(currentPage - 1) * itemsPerPage + 1}
+              indexOfLastItem={Math.min(
+                currentPage * itemsPerPage,
+                yearlyData.length,
+              )}
+              activeTotalPages={totalYearlyPages}
+              activeTotalItems={yearlyData.length}
+              activeFirstItem={(currentPage - 1) * itemsPerPage + 1}
+              activeLastItem={Math.min(
+                currentPage * itemsPerPage,
+                yearlyData.length,
+              )}
+              navigate={navigate}
+              goToEdit={goToEdit}
+              handleDelete={handleDelete}
+              formatCurrency={formatCurrency}
+              formatDate={formatDate}
+            />
+          </>
+        )}
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="bg-card border border-border rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                Showing {indexOfFirstItem + 1} to{" "}
-                {Math.min(indexOfLastItem, filteredRegisters.length)} of{" "}
-                {filteredRegisters.length}
-              </p>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(prev - 1, 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="p-2 border border-border rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4 text-muted-foreground" />
-                </button>
-                <span className="text-sm text-foreground px-2">
-                  {currentPage} / {totalPages}
-                </span>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="p-2 border border-border rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     );
   }

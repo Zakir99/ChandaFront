@@ -18,10 +18,10 @@ import { useNavigate } from "react-router-dom";
 import {toast} from "react-toastify";
 
 const DeathSupportCreate = () => {
-  const [darkMode, setDarkMode] = useState(() => {
-    const saved = localStorage.getItem("darkMode");
-    return saved ? JSON.parse(saved) : false;
-  });
+  // const [darkMode, setDarkMode] = useState(() => {
+  //   const saved = localStorage.getItem("darkMode");
+  //   return saved ? JSON.parse(saved) : false;
+  // });
 
   const [formData, setFormData] = useState({
     family_id: "",
@@ -52,14 +52,14 @@ const DeathSupportCreate = () => {
     fetchFamilies();
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem("darkMode", JSON.stringify(darkMode));
-    if (darkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [darkMode]);
+  // useEffect(() => {
+  //   localStorage.setItem("darkMode", JSON.stringify(darkMode));
+  //   if (darkMode) {
+  //     document.documentElement.classList.add("dark");
+  //   } else {
+  //     document.documentElement.classList.remove("dark");
+  //   }
+  // }, [darkMode]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -134,7 +134,7 @@ const DeathSupportCreate = () => {
             <span className="font-medium">Back to List</span>
           </button>
 
-          <button
+          {/* <button
             onClick={() => setDarkMode(!darkMode)}
             className="p-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm"
             aria-label="Toggle dark mode"
@@ -144,7 +144,7 @@ const DeathSupportCreate = () => {
             ) : (
               <Moon size={20} className="text-gray-600" />
             )}
-          </button>
+          </button> */}
         </div>
 
         {/* Main Card */}

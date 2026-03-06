@@ -55,10 +55,10 @@ const Sidebar = ({ isOpen, onClose }) => {
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            {/* <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <span className="text-primary-foreground font-bold text-sm">C</span>
-            </div>
-            <span className="font-semibold text-foreground text-lg">Chanda</span>
+            </div> */}
+            <span className="font-semibold text-foreground text-lg">Chande Management</span>
           </div>
           <button
             onClick={onClose}
@@ -81,7 +81,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                   navigate(item.path);
                   onClose();
                 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 group ${
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer group ${
                   active
                     ? "bg-primary text-primary-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"

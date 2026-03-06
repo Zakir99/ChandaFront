@@ -19,13 +19,14 @@ import {
   TrendingUp,
   Calendar,
   DollarSign,
+  X,
 } from "lucide-react";
 import Config from "../../Js/Config";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { useParams, useNavigate } from "react-router-dom";
 import generatePDF from "../../components/supportPdf";
-// import PaymentModal from "../../components/PaymentModal";
+import PaymentModal from "../../components/PaymentModal.jsx";
 
 const DeathSupportView = () => {
   const [record, setRecord] = useState([]);
@@ -99,7 +100,6 @@ const DeathSupportView = () => {
       await axios.post(`${Config.apiUrl}payment/payUser`, {
         support_id: record.id,
         family_id: familyId,
-        payment_id: paymentId,
       });
 
       setFamilies((prev) =>
@@ -118,6 +118,37 @@ const DeathSupportView = () => {
       toast.success("Family marked as paid successfully!");
     } catch (error) {
       toast.error("Error marking family as paid!");
+    } finally {
+      setProcessingPayment(null);
+    }
+  };
+
+  const handleCancelPayment = async (familyId, paymentId) => {
+    setProcessingPayment(familyId);
+
+    try {
+      await axios.post(`${Config.apiUrl}payment/cancelPayUser`, {
+        support_id: record.id,
+        family_id: familyId,
+        payment_id: paymentId,
+      });
+
+      setFamilies((prev) =>
+        prev.map((family) =>
+          family.id === familyId
+            ? {
+                ...family,
+                status: "unpaid",
+                payment_id: null,
+                amount: 0,
+              }
+            : family,
+        ),
+      );
+
+      toast.success("Family marked as unpaid successfully!");
+    } catch (error) {
+      toast.error("Error marking family as unpaid!");
     } finally {
       setProcessingPayment(null);
     }
@@ -203,10 +234,13 @@ const DeathSupportView = () => {
       : "from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900";
   };
 
+  const closeModal = () => setIsModalOpen(false);
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
-      <div className={`bg-linear-to-r ${getBgClass(record.paid_at)} text-white shadow-xl top-0`}
+      <div
+        className={`bg-linear-to-r ${getBgClass(record.paid_at)} text-white shadow-xl top-0`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
           <div className="flex items-center justify-between mb-4">
@@ -219,13 +253,15 @@ const DeathSupportView = () => {
             </button>
 
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Mark as Paid"
-              >
-                <CheckCircle size={20} />
-              </button>
+              {!record.paid_at && (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
+                  aria-label="Mark as Paid"
+                >
+                  <CheckCircle size={20} />
+                </button>
+              )}
               <button
                 onClick={toggleDarkMode}
                 className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
@@ -511,7 +547,7 @@ const DeathSupportView = () => {
             </div>
 
             {/* Families List */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                   Family Payment Status
@@ -522,136 +558,176 @@ const DeathSupportView = () => {
                 </div>
               </div>
 
-              <div className="p-6">
-                {filteredfamilies?.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Users
-                        size={32}
-                        className="text-gray-400 dark:text-gray-500"
-                      />
-                    </div>
-                    <p className="text-gray-500 dark:text-gray-400 font-medium">
-                      No families found
-                    </p>
-                    <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
-                      Try adjusting your filters
-                    </p>
+              {filteredfamilies?.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Users
+                      size={32}
+                      className="text-gray-400 dark:text-gray-500"
+                    />
                   </div>
-                ) : (
-                  <>
-                    <div className="space-y-3">
-                      {paginatedfamilies?.map((family) => (
-                        <div
-                          key={family.id}
-                          className={`rounded-xl transition-all duration-200 border ${
-                            family.status == "paid"
-                              ? "bg-linear-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 border-emerald-200 dark:border-emerald-800"
-                              : "bg-white dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:shadow-md"
-                          }`}
-                        >
-                          <div className="p-4">
-                            <div className="flex items-center justify-between gap-4 mb-3">
-                              <h3 className="font-semibold text-gray-900 dark:text-white text-base flex-1 truncate">
+                  <p className="text-gray-500 dark:text-gray-400 font-medium">
+                    No families found
+                  </p>
+                  <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
+                    Try adjusting your filters
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {/* Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Family Name
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                            Action
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                        {paginatedfamilies?.map((family) => (
+                          <tr
+                            key={family.id}
+                            className={`transition-colors ${
+                              family.status === "paid"
+                                ? "bg-emerald-50/50 dark:bg-emerald-900/10"
+                                : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                            }`}
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900 dark:text-white">
                                 {family.family_name}
-                              </h3>
-
-                              {family.status == "paid" ? (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 shrink-0">
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {family.status === "paid" ? (
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                   <CheckCircle size={14} />
                                   Paid
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-700 shrink-0">
+                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                                   <Clock size={14} />
                                   Pending
                                 </span>
                               )}
-                            </div>
-
-                            {family.status != "paid" && (
-                              <button
-                                onClick={() =>
-                                  handleMarkAsPaid(family.id, family.payment_id)
-                                }
-                                disabled={processingPayment === family.id}
-                                className="w-full py-3 px-4 bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 text-white rounded-lg font-medium text-sm hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-800 dark:hover:to-indigo-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95"
-                              >
-                                {processingPayment === family.id ? (
-                                  <>
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    <span>Processing...</span>
-                                  </>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                {family.status !== "paid" ? (
+                                  <button
+                                    onClick={() =>
+                                      handleMarkAsPaid(
+                                        family.id,
+                                        family.payment_id,
+                                      )
+                                    }
+                                    disabled={processingPayment === family.id}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 text-white rounded-lg font-medium text-sm hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-800 dark:hover:to-indigo-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md active:scale-95"
+                                  >
+                                    {processingPayment === family.id ? (
+                                      <>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <span>Processing...</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Check size={16} />
+                                        <span>Mark as Paid</span>
+                                      </>
+                                    )}
+                                  </button>
                                 ) : (
-                                  <>
-                                    <Check size={16} />
-                                    <span>Mark as Paid</span>
-                                  </>
+                                  <button
+                                    onClick={() =>
+                                      handleCancelPayment(
+                                        family.id,
+                                        family.payment_id,
+                                      )
+                                    }
+                                    disabled={processingPayment === family.id}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-red-600 to-rose-600 dark:from-red-700 dark:to-rose-700 text-white rounded-lg font-medium text-sm hover:from-red-700 hover:to-rose-700 dark:hover:from-red-800 dark:hover:to-rose-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md active:scale-95"
+                                  >
+                                    {processingPayment === family.id ? (
+                                      <>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        <span>Cancelling...</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <X size={16} />
+                                        <span>Cancel Payment</span>
+                                      </>
+                                    )}
+                                  </button>
                                 )}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                        <div className="flex items-center justify-between">
-                          <div className="text-sm text-gray-600 dark:text-gray-400">
-                            Showing {startIndex + 1}-
-                            {Math.min(
-                              startIndex + itemsPerPage,
-                              filteredfamilies?.length,
-                            )}{" "}
-                            of {filteredfamilies?.length}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() =>
-                                setCurrentPage((prev) => Math.max(prev - 1, 1))
-                              }
-                              disabled={currentPage === 1}
-                              className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
-                            >
-                              <ChevronLeft size={20} />
-                            </button>
-                            <span className="text-sm font-medium px-4 text-gray-900 dark:text-white">
-                              {currentPage} / {totalPages}
-                            </span>
-                            <button
-                              onClick={() =>
-                                setCurrentPage((prev) =>
-                                  Math.min(prev + 1, totalPages),
-                                )
-                              }
-                              disabled={currentPage === totalPages}
-                              className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
-                            >
-                              <ChevronRight size={20} />
-                            </button>
-                          </div>
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Showing {startIndex + 1}-
+                          {Math.min(
+                            startIndex + itemsPerPage,
+                            filteredfamilies?.length,
+                          )}{" "}
+                          of {filteredfamilies?.length}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() =>
+                              setCurrentPage((prev) => Math.max(prev - 1, 1))
+                            }
+                            disabled={currentPage === 1}
+                            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+                            aria-label="Previous page"
+                          >
+                            <ChevronLeft size={20} />
+                          </button>
+                          <span className="text-sm font-medium px-4 text-gray-900 dark:text-white min-w-20 text-center">
+                            Page {currentPage} of {totalPages}
+                          </span>
+                          <button
+                            onClick={() =>
+                              setCurrentPage((prev) =>
+                                Math.min(prev + 1, totalPages),
+                              )
+                            }
+                            disabled={currentPage === totalPages}
+                            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
+                            aria-label="Next page"
+                          >
+                            <ChevronRight size={20} />
+                          </button>
                         </div>
                       </div>
-                    )}
-                  </>
-                )}
-              </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Payment Modal */}
-      {/* {isModalOpen && (
-        <PaymentModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          data={data}
-          onSubmit={handleMarkAsPaid}
-        />
-      )} */}
+      {isModalOpen && (
+        <PaymentModal data={data} isOpen={isModalOpen} onClose={closeModal} />
+      )}
     </div>
   );
 };

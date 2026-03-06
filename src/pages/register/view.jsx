@@ -28,6 +28,7 @@ import axios from "axios";
 import Config from "../../Js/Config";
 // import "./view.css";
 import { toast } from "react-toastify";
+import RegisterDashboard from "../../components/smallComponents";
 // Constants
 const ITEMS_PER_PAGE = 10;
 const MAX_VISIBLE_PAGES = 5;
@@ -48,27 +49,6 @@ const formatCurrency = (amount) => {
     currency: "PKR",
   }).format(amount || 0);
 };
-
-// Sub-components
-const StatsCard = ({ icon: Icon, value, label, color, gradient, isDark }) => (
-  <div
-    className={`${gradient} rounded-2xl shadow-lg p-6  ${
-      isDark
-        ? "border-gray-700/50 hover:shadow-2xl border"
-        : "border-white/20 hover:shadow-xl"
-    } transition-all duration-300 transform hover:-translate-y-1`}
-  >
-    <div className="flex items-center justify-between mb-3">
-      <div className={`p-3 bg-white/10 backdrop-blur-sm rounded-xl`}>
-        <Icon className="w-6 h-6 text-white" />
-      </div>
-      <span className="text-3xl font-bold text-white drop-shadow-lg">
-        {value}
-      </span>
-    </div>
-    <p className="text-sm text-white/90 font-medium">{label}</p>
-  </div>
-);
 
 const FilterButton = ({
   filter,
@@ -271,7 +251,7 @@ const MonthlyRegistersView = () => {
   const [selectedPayments, setSelectedPayments] = useState([]);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState({ type: "", text: "" });
-
+  const [showFilters, setShowFilters] = useState(false);
   // Dark Mode Effect
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(isDark));
@@ -291,19 +271,6 @@ const MonthlyRegistersView = () => {
   const unpaidFamilies = useMemo(
     () => families.filter((f) => Number(f.total_unpaid_amount) > 0),
     [families],
-  );
-
-  const paymentRate = useMemo(
-    () =>
-      families.length > 0
-        ? ((paidFamilies.length / families.length) * 100).toFixed(1)
-        : "0.0",
-    [families.length, paidFamilies.length],
-  );
-
-  const totalDue = useMemo(
-    () => unpaidFamilies.length * (register?.amount_per_member || 0),
-    [unpaidFamilies.length, register],
   );
 
   const totalSelectedAmount = useMemo(
@@ -355,7 +322,6 @@ const MonthlyRegistersView = () => {
         const response = await axios.get(`${Config.apiUrl}registers/${id}`);
         setRegister(response.data.register);
         setFamilies(response.data.families || []);
-        console.log(response.data.families);
       } catch (error) {
         console.error("Error fetching register:", error);
       }
@@ -585,20 +551,33 @@ const MonthlyRegistersView = () => {
               <span className="text-sm font-semibold">Back to Registers</span>
             </button>
 
-            <button
-              onClick={() => setIsDark(!isDark)}
-              className={`p-3 rounded-xl transition-all duration-300 transform hover:scale-110 ${
-                isDark
-                  ? "bg-gray-700 hover:bg-gray-600 text-yellow-400"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-              }`}
-            >
-              {isDark ? (
-                <Sun className="w-5 h-5" />
-              ) : (
-                <Moon className="w-5 h-5" />
-              )}
-            </button>
+            <div className="space-x-4">
+              <button
+                className={`p-3 rounded-xl transition-all duration-300 transform hover:scale-110 ${
+                  isDark
+                    ? "bg-gray-700 hover:bg-gray-600 text-yellow-400"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                }`}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                <Filter className="w-5 h-5" />
+              </button>
+
+              <button
+                onClick={() => setIsDark(!isDark)}
+                className={`p-3 rounded-xl transition-all duration-300 transform hover:scale-110 ${
+                  isDark
+                    ? "bg-gray-700 hover:bg-gray-600 text-yellow-400"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                }`}
+              >
+                {isDark ? (
+                  <Sun className="w-5 h-5" />
+                ) : (
+                  <Moon className="w-5 h-5" />
+                )}
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -639,149 +618,13 @@ const MonthlyRegistersView = () => {
       <div
         className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${isDark ? "bg-black" : "bg-white"}`}
       >
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatsCard
-            icon={Users}
-            value={families.length}
-            label="Total Families"
-            gradient="bg-linear-to-br from-blue-500 to-blue-700"
+        {showFilters && (
+          <RegisterDashboard
+            register={register}
+            families={families}
             isDark={isDark}
           />
-          <StatsCard
-            icon={CheckCircle}
-            value={paidFamilies.length}
-            label="Paid Families"
-            gradient="bg-linear-to-br from-green-500 to-green-700"
-            isDark={isDark}
-          />
-          <StatsCard
-            icon={XCircle}
-            value={unpaidFamilies.length}
-            label="Unpaid Families"
-            gradient="bg-linear-to-br from-red-500 to-red-700"
-            isDark={isDark}
-          />
-          <StatsCard
-            icon={TrendingUp}
-            value={`${paymentRate}%`}
-            label="Payment Rate"
-            gradient="bg-linear-to-br from-purple-500 to-purple-700"
-            isDark={isDark}
-          />
-        </div>
-
-        {/* Financial Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div
-            className={`rounded-2xl shadow-lg p-6  transition-all duration-300 transform hover:-translate-y-1 ${
-              isDark
-                ? "bg-linear-to-br from-blue-900/50 to-blue-800/50 border-blue-700 border"
-                : "bg-linear-to-br from-blue-50 to-blue-100 border-blue-200"
-            }`}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div
-                className={`p-2 rounded-lg ${
-                  isDark ? "bg-blue-800/50" : "bg-blue-200/50"
-                }`}
-              >
-                <DollarSign
-                  className={`w-5 h-5 ${
-                    isDark ? "text-blue-300" : "text-blue-700"
-                  }`}
-                />
-              </div>
-              <p
-                className={`text-sm font-medium ${
-                  isDark ? "text-blue-300" : "text-blue-900"
-                }`}
-              >
-                Amount per Member
-              </p>
-            </div>
-            <p
-              className={`text-3xl font-bold ${
-                isDark ? "text-blue-100" : "text-blue-900"
-              }`}
-            >
-              {formatCurrency(register.amount_per_member)}
-            </p>
-          </div>
-
-          <div
-            className={`rounded-2xl shadow-lg p-6  transition-all duration-300 transform hover:-translate-y-1 ${
-              isDark
-                ? "bg-linear-to-br from-green-900/50 to-green-800/50 border-green-700 border"
-                : "bg-linear-to-br from-green-50 to-green-100 border-green-200"
-            }`}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div
-                className={`p-2 rounded-lg ${
-                  isDark ? "bg-green-800/50" : "bg-green-200/50"
-                }`}
-              >
-                <CheckCircle
-                  className={`w-5 h-5 ${
-                    isDark ? "text-green-300" : "text-green-700"
-                  }`}
-                />
-              </div>
-              <p
-                className={`text-sm font-medium ${
-                  isDark ? "text-green-300" : "text-green-900"
-                }`}
-              >
-                Total Collected
-              </p>
-            </div>
-            <p
-              className={`text-3xl font-bold ${
-                isDark ? "text-green-100" : "text-green-900"
-              }`}
-            >
-              {formatCurrency(register.amount_per_member * paidFamilies.length)}
-            </p>
-          </div>
-
-          <div
-            className={`rounded-2xl shadow-lg p-6  transition-all duration-300 transform hover:-translate-y-1 ${
-              isDark
-                ? "bg-linear-to-br from-red-900/50 to-red-800/50 border-red-700 border"
-                : "bg-linear-to-br from-red-50 to-red-100 border-red-200"
-            }`}
-          >
-            <div className="flex items-center gap-3 mb-2">
-              <div
-                className={`p-2 rounded-lg ${
-                  isDark ? "bg-red-800/50" : "bg-red-200/50"
-                }`}
-              >
-                <Clock
-                  className={`w-5 h-5 ${
-                    isDark ? "text-white" : "text-red-700"
-                  }`}
-                />
-              </div>
-              <p
-                className={`text-sm font-medium ${
-                  isDark ? "text-white" : "text-red-900"
-                }`}
-              >
-                Total Outstanding
-              </p>
-            </div>
-            <p
-              className={`text-3xl font-bold ${
-                isDark ? "text-red-100" : "text-red-900"
-              }`}
-            >
-              {formatCurrency(totalDue)}
-            </p>
-          </div>
-        </div>
-
+        )}
         {/* Filters Section */}
         <div
           className={`rounded-2xl shadow-lg p-6 mb-8  ${
@@ -894,7 +737,7 @@ const MonthlyRegistersView = () => {
                     isDark ? "text-gray-300" : "text-gray-700"
                   }`}
                 >
-                  Payment_status
+                  Payment Status
                 </th>
                 <th
                   className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${

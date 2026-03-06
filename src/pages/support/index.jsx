@@ -333,7 +333,7 @@ const DeathSupportIndex = () => {
                     Paid Amount
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Amount
+                    Amount per Member
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Status
@@ -357,7 +357,7 @@ const DeathSupportIndex = () => {
                     </td>
                     <td className="px-4 py-4">
                       <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-semibold ${
                           item.death_type === "local"
                             ? "bg-primary/10 text-primary"
                             : "bg-warning/10 text-warning"
@@ -365,21 +365,21 @@ const DeathSupportIndex = () => {
                       >
                         {item.death_type === "local" ? (
                           <>
-                            <MapPin className="w-3 h-3 mr-1" /> Local
+                           Local
                           </>
                         ) : (
                           <>
-                            <Users className="w-3 h-3 mr-1" /> External
+                          External
                           </>
                         )}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-sm text-muted-foreground">
+                    <td className="px-4 py-4 text-success font-bold text-center">
                       {item.paid_amount || "-"}
                     </td>
-                    <td className="px-4 py-4">
-                      <span className="font-bold text-primary">
-                        {item.paid_amount}
+                    <td className="px-4 py-4 text-center">
+                      <span className="font-bold text-primary ">
+                        {item.amount_per_member}
                       </span>
                     </td>
                     <td className="px-4 py-4">

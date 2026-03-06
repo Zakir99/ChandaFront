@@ -5,6 +5,8 @@ import AppLayout from "./components/Layout";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+import "leaflet/dist/leaflet.css";
+
 import DashboardView from "./pages/Dashboard/Main";
 import UnpaidListView from "./pages/Dashboard/unpaidFamilies";
 
@@ -20,12 +22,16 @@ import EditMember from "./pages/members/edit";
 
 import MonthlyRegisters from "./pages/register/index";
 import MonthlyRegistersView from "./pages/register/view";
+import PaymentTracker from "./pages/register/main";
 
 import DeathSupportIndex from "./pages/support/index";
 import DeathSupportCreate from "./pages/support/create";
 import DeathSupportView from "./pages/support/view";
 import DeathSupportEdit from "./pages/support/edit";
+
 import WhatsAppMessenger from "./pages/Messages/Main";
+
+import Dashboard from "./pages/Dashboard/Dashboard";
 
 const App = () => {
   return (
@@ -45,6 +51,7 @@ const App = () => {
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="dashboard" element={<DashboardView />} />
+          <Route path="Dash" element={<Dashboard />} />
           <Route path="unpaid" element={<UnpaidListView />} />
 
           <Route path="family" element={<FamilyTable />} />
@@ -59,6 +66,7 @@ const App = () => {
 
           <Route path="register" element={<MonthlyRegisters />} />
           <Route path="register/:id" element={<MonthlyRegistersView />} />
+          <Route path="register/yearly/:year" element={<PaymentTracker />} />
 
           <Route path="support" element={<DeathSupportIndex />} />
           <Route path="support/create" element={<DeathSupportCreate />} />
