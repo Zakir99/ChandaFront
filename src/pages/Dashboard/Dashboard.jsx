@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
 import {
   DollarSign, TrendingUp, Users, Clock, AlertTriangle,
   Activity, CheckCircle, XCircle, Heart, Download,
   CreditCard, UserPlus, Home, ChevronRight, Zap
 } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const monthlyData = [
   { month: 'Jan', collected: 5200, externalPaid: 1200 },
@@ -33,17 +32,11 @@ const recentActivities = [
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div style={{
-        background: '#1a1f2e',
-        border: '1px solid #2a3040',
-        borderRadius: '10px',
-        padding: '12px 16px',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-      }}>
-        <p style={{ color: '#7b8db0', fontSize: '11px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</p>
+      <div className="bg-gray-900 dark:bg-gray-800 border border-gray-800 dark:border-gray-700 rounded-xl p-4 shadow-xl">
+        <p className="text-gray-400 dark:text-gray-500 text-xs mb-2 uppercase tracking-wider">{label}</p>
         {payload.map((entry, i) => (
-          <p key={i} style={{ color: entry.color, fontSize: '13px', fontWeight: 600, margin: '3px 0' }}>
-            {entry.name}: <span style={{ color: '#e2e8f0' }}>${entry.value.toLocaleString()}</span>
+          <p key={i} className="text-sm font-semibold mt-1" style={{ color: entry.color }}>
+            {entry.name}: <span className="text-gray-200 dark:text-gray-300">${entry.value.toLocaleString()}</span>
           </p>
         ))}
       </div>
@@ -54,19 +47,15 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 const StatusBadge = ({ status }) => {
   const config = {
-    paid:    { bg: 'rgba(16,185,129,0.12)', text: '#10b981', icon: <CheckCircle size={11} />, label: 'Paid' },
-    pending: { bg: 'rgba(245,158,11,0.12)',  text: '#f59e0b', icon: <Clock size={11} />,       label: 'Pending' },
-    unpaid:  { bg: 'rgba(239,68,68,0.12)',   text: '#ef4444', icon: <XCircle size={11} />,     label: 'Unpaid' },
-    active:  { bg: 'rgba(99,102,241,0.12)',  text: '#818cf8', icon: <Zap size={11} />,          label: 'Active' },
+    paid:    { bg: 'bg-emerald-500/10', text: 'text-emerald-500', icon: <CheckCircle size={11} />, label: 'Paid' },
+    pending: { bg: 'bg-amber-500/10', text: 'text-amber-500', icon: <Clock size={11} />, label: 'Pending' },
+    unpaid:  { bg: 'bg-red-500/10', text: 'text-red-500', icon: <XCircle size={11} />, label: 'Unpaid' },
+    active:  { bg: 'bg-indigo-500/10', text: 'text-indigo-400', icon: <Zap size={11} />, label: 'Active' },
   };
   const c = config[status] || config.active;
+  
   return (
-    <span style={{
-      display: 'inline-flex', alignItems: 'center', gap: '4px',
-      background: c.bg, color: c.text,
-      padding: '3px 10px', borderRadius: '20px',
-      fontSize: '11px', fontWeight: 600, letterSpacing: '0.3px'
-    }}>
+    <span className={`inline-flex items-center gap-1 ${c.bg} ${c.text} px-2.5 py-1 rounded-full text-xs font-semibold tracking-wide`}>
       {c.icon} {c.label}
     </span>
   );
@@ -74,51 +63,31 @@ const StatusBadge = ({ status }) => {
 
 const ActivityIcon = ({ type }) => {
   const map = {
-    death_support:   { bg: 'rgba(139,92,246,0.15)', color: '#a78bfa', icon: <Heart size={14} /> },
-    monthly_payment: { bg: 'rgba(59,130,246,0.15)',  color: '#60a5fa', icon: <CreditCard size={14} /> },
-    new_family:      { bg: 'rgba(16,185,129,0.15)',  color: '#34d399', icon: <UserPlus size={14} /> },
+    death_support:   { bg: 'bg-purple-500/15', text: 'text-purple-400', icon: <Heart size={14} /> },
+    monthly_payment: { bg: 'bg-blue-500/15', text: 'text-blue-400', icon: <CreditCard size={14} /> },
+    new_family:      { bg: 'bg-emerald-500/15', text: 'text-emerald-400', icon: <UserPlus size={14} /> },
   };
   const c = map[type] || map.monthly_payment;
+  
   return (
-    <div style={{
-      background: c.bg, color: c.color,
-      width: 32, height: 32, borderRadius: 8,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexShrink: 0
-    }}>
+    <div className={`${c.bg} ${c.text} w-8 h-8 rounded-lg flex items-center justify-center shrink-0`}>
       {c.icon}
     </div>
   );
 };
 
 const KpiCard = ({ label, sublabel, value, icon, accent, prefix = '$' }) => (
-  <div style={{
-    background: 'linear-gradient(135deg, #141922 0%, #0f1318 100%)',
-    border: `1px solid #1e2535`,
-    borderTop: `2px solid ${accent}`,
-    borderRadius: 14,
-    padding: '22px 24px',
-    position: 'relative',
-    overflow: 'hidden',
-  }}>
-    <div style={{
-      position: 'absolute', top: -20, right: -20,
-      width: 100, height: 100, borderRadius: '50%',
-      background: `${accent}10`
-    }} />
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+  <div className="relative bg-linear-to-br from-gray-900 to-gray-950 dark:from-gray-800 dark:to-gray-900 border border-gray-800 dark:border-gray-700 border-t-2 rounded-xl p-6 overflow-hidden" style={{ borderTopColor: accent }}>
+    <div className="absolute -top-5 -right-5 w-24 h-24 rounded-full opacity-10" style={{ background: accent }} />
+    <div className="flex justify-between items-start">
       <div>
-        <p style={{ color: '#5a6a8a', fontSize: 12, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 8 }}>{label}</p>
-        <p style={{ color: '#f0f4ff', fontSize: 26, fontWeight: 700, lineHeight: 1, margin: 0 }}>
+        <p className="text-gray-400 dark:text-gray-500 text-xs font-medium uppercase tracking-wide mb-2">{label}</p>
+        <p className="text-gray-100 dark:text-gray-100 text-2xl font-bold leading-none">
           {prefix}{typeof value === 'number' ? value.toLocaleString() : value}
         </p>
-        {sublabel && <p style={{ color: '#3d4e6a', fontSize: 11, marginTop: 6 }}>{sublabel}</p>}
+        {sublabel && <p className="text-gray-500 dark:text-gray-600 text-xs mt-1.5">{sublabel}</p>}
       </div>
-      <div style={{
-        background: `${accent}18`, color: accent,
-        width: 44, height: 44, borderRadius: 12,
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
-      }}>
+      <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: `${accent}18`, color: accent }}>
         {icon}
       </div>
     </div>
@@ -126,32 +95,18 @@ const KpiCard = ({ label, sublabel, value, icon, accent, prefix = '$' }) => (
 );
 
 const RiskCard = ({ label, sublabel, value, icon, accent, badge }) => (
-  <div style={{
-    background: 'linear-gradient(135deg, #141922 0%, #0f1318 100%)',
-    border: `1px solid #1e2535`,
-    borderLeft: `3px solid ${accent}`,
-    borderRadius: 14,
-    padding: '22px 24px',
-  }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+  <div className="bg-linear-to-br from-gray-900 to-gray-950 dark:from-gray-800 dark:to-gray-900 border border-gray-800 dark:border-gray-700 border-l-4 rounded-xl p-6">
+    <div className="flex justify-between items-center mb-4">
       <div>
-        <p style={{ color: '#5a6a8a', fontSize: 12, fontWeight: 500, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 6 }}>{label}</p>
-        <p style={{ color: '#f0f4ff', fontSize: 32, fontWeight: 700, margin: 0 }}>{value}</p>
-        <p style={{ color: '#3d4e6a', fontSize: 11, marginTop: 4 }}>{sublabel}</p>
+        <p className="text-gray-400 dark:text-gray-500 text-xs font-medium uppercase tracking-wide mb-1.5">{label}</p>
+        <p className="text-gray-100 dark:text-gray-100 text-3xl font-bold">{value}</p>
+        <p className="text-gray-500 dark:text-gray-600 text-xs mt-1">{sublabel}</p>
       </div>
-      <div style={{
-        background: `${accent}15`, color: accent,
-        width: 48, height: 48, borderRadius: 12,
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
-      }}>
+      <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${accent}15`, color: accent }}>
         {icon}
       </div>
     </div>
-    <div style={{
-      background: `${accent}10`, border: `1px solid ${accent}25`,
-      borderRadius: 8, padding: '8px 12px',
-      color: accent, fontSize: 12, fontWeight: 500
-    }}>
+    <div className="p-2.5 rounded-lg text-xs font-medium" style={{ background: `${accent}10`, border: `1px solid ${accent}25`, color: accent }}>
       {badge}
     </div>
   </div>
@@ -163,63 +118,39 @@ export default function Dashboard() {
   const paidFamilies = Math.round(totalFamilies * compliance / 100);
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#0b0f18',
-      color: '#e2e8f0',
-      fontFamily: "'DM Sans', 'Segoe UI', sans-serif",
-      padding: '32px',
-    }}>
-
+    <div className="min-h-screen bg-gray-900/90 dark:bg-gray-900 text-gray-200 font-sans p-8">
       {/* Ambient background glow */}
-      <div style={{
-        position: 'fixed', top: '-200px', left: '50%', transform: 'translateX(-50%)',
-        width: '600px', height: '400px', borderRadius: '50%',
-        background: 'radial-gradient(ellipse, rgba(56,189,248,0.04) 0%, transparent 70%)',
-        pointerEvents: 'none', zIndex: 0
-      }} />
+      <div className="fixed -top-48 left-1/2 -translate-x-1/2 w-150 h-100 rounded-full bg-linear-to-b from-sky-500/5 to-transparent pointer-events-none z-0" />
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
-
+      <div className="relative z-10">
         {/* ── Header ── */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 36 }}>
+        <div className="flex justify-between items-center mb-9">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 10,
-                background: 'linear-gradient(135deg, #38bdf8, #818cf8)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                <Activity size={18} color="#fff" />
+            <div className="flex items-center gap-2.5 mb-1.5">
+              <div className="w-9 h-9 rounded-lg bg-linear-to-br from-sky-400 to-indigo-400 flex items-center justify-center">
+                <Activity size={18} className="text-white" />
               </div>
-              <h1 style={{ fontSize: 22, fontWeight: 700, color: '#f0f4ff', margin: 0, letterSpacing: '-0.3px' }}>
+              <h1 className="text-2xl font-bold text-gray-100 dark:text-gray-100 tracking-tight">
                 FAMILY FUND
               </h1>
             </div>
-            <p style={{ color: '#3d4e6a', fontSize: 13, margin: 0, letterSpacing: '0.3px' }}>
+            <p className="text-gray-500 dark:text-gray-600 text-xs tracking-wide">
               Financial Operations Dashboard · FY 2024
             </p>
           </div>
-          <button style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            background: 'linear-gradient(135deg, #38bdf8, #0284c7)',
-            border: 'none', borderRadius: 10,
-            padding: '10px 20px', color: '#fff',
-            fontSize: 13, fontWeight: 600, cursor: 'pointer',
-            boxShadow: '0 4px 20px rgba(56,189,248,0.25)'
-          }}>
+          <button className="flex items-center gap-2 bg-linear-to-br from-sky-400 to-blue-600 border-none rounded-lg px-5 py-2.5 text-white text-xs font-semibold cursor-pointer shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 transition-all">
             <Download size={15} />
             Export Report
           </button>
         </div>
 
         {/* ── Section: Financial Summary ── */}
-        <div style={{ marginBottom: 8 }}>
-          <p style={{ color: '#38bdf8', fontSize: 11, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 14px 2px' }}>
+        <div className="mb-2">
+          <p className="text-sky-400 text-xs font-semibold tracking-widest uppercase mb-3.5 ml-0.5">
             ◆ Financial Summary
           </p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
+        <div className="grid grid-cols-4 gap-4 mb-8">
           <KpiCard label="Monthly Collected" sublabel="Current Year Total" value={45600} icon={<TrendingUp size={20} />} accent="#38bdf8" />
           <KpiCard label="External Paid" sublabel="Death support payouts" value={12300} icon={<Heart size={20} />} accent="#a78bfa" />
           <KpiCard label="Available Balance" sublabel="Usable fund reserve" value={33300} icon={<DollarSign size={20} />} accent="#34d399" />
@@ -227,24 +158,24 @@ export default function Dashboard() {
         </div>
 
         {/* ── Section: Risk ── */}
-        <div style={{ marginBottom: 8 }}>
-          <p style={{ color: '#f59e0b', fontSize: 11, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 14px 2px' }}>
+        <div className="mb-2">
+          <p className="text-amber-500 text-xs font-semibold tracking-widest uppercase mb-3.5 ml-0.5">
             ◆ Pending & Risk Indicators
           </p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
+        <div className="grid grid-cols-3 gap-4 mb-8">
           <RiskCard label="Unpaid Monthly" sublabel="Families with overdue contributions" value={8} icon={<Clock size={22} />} accent="#f59e0b" badge="⚠ 8 pending contributions this cycle" />
           <RiskCard label="Pending Local" sublabel="Unresolved local death cases" value={4} icon={<XCircle size={22} />} accent="#fb923c" badge="⏳ 4 local payments awaiting processing" />
           <RiskCard label="Unpaid External" sublabel="Outstanding external cases" value={2} icon={<AlertTriangle size={22} />} accent="#ef4444" badge="🔴 2 cases require immediate action" />
         </div>
 
         {/* ── Section: Activity Overview ── */}
-        <div style={{ marginBottom: 8 }}>
-          <p style={{ color: '#818cf8', fontSize: 11, fontWeight: 600, letterSpacing: '2px', textTransform: 'uppercase', margin: '0 0 14px 2px' }}>
+        <div className="mb-2">
+          <p className="text-indigo-400 text-xs font-semibold tracking-widest uppercase mb-3.5 ml-0.5">
             ◆ Activity Overview
           </p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
+        <div className="grid grid-cols-3 gap-4 mb-8">
           {[
             { label: 'Active Families', value: 45, icon: <Home size={20} />, accent: '#818cf8', sublabel: 'Registered & contributing' },
             { label: 'Local Deaths', value: 6, icon: <Heart size={20} />, accent: '#f472b6', sublabel: 'This year' },
@@ -255,65 +186,57 @@ export default function Dashboard() {
         </div>
 
         {/* ── Charts Row ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 20, marginBottom: 28 }}>
-
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 mb-7">
           {/* Area Chart */}
-          <div style={{
-            background: 'linear-gradient(135deg, #141922 0%, #0f1318 100%)',
-            border: '1px solid #1e2535',
-            borderRadius: 14, padding: '24px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+          <div className="bg-linear-to-br from-gray-900 to-gray-950 dark:from-gray-800 dark:to-gray-900 border border-gray-800 dark:border-gray-700 rounded-xl p-6">
+            <div className="flex justify-between items-center mb-6">
               <div>
-                <h3 style={{ color: '#f0f4ff', fontSize: 15, fontWeight: 600, margin: 0 }}>Collections vs Payouts</h3>
-                <p style={{ color: '#3d4e6a', fontSize: 12, margin: '4px 0 0' }}>Monthly breakdown for FY 2024</p>
+                <h3 className="text-gray-100 dark:text-gray-100 text-sm font-semibold">Collections vs Payouts</h3>
+                <p className="text-gray-500 dark:text-gray-600 text-xs mt-1">Monthly breakdown for FY 2024</p>
               </div>
-              <div style={{ display: 'flex', gap: 16 }}>
+              <div className="flex gap-4">
                 {[['#38bdf8', 'Collected'], ['#a78bfa', 'External Paid']].map(([color, label]) => (
-                  <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: color }} />
-                    <span style={{ color: '#5a6a8a', fontSize: 11 }}>{label}</span>
+                  <div key={label} className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full" style={{ background: color }} />
+                    <span className="text-gray-500 dark:text-gray-600 text-xs">{label}</span>
                   </div>
                 ))}
               </div>
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="gradCollected" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.25} />
-                    <stop offset="95%" stopColor="#38bdf8" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="gradExternal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.2} />
-                    <stop offset="95%" stopColor="#a78bfa" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1a2235" />
-                <XAxis dataKey="month" tick={{ fill: '#3d4e6a', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#3d4e6a', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="collected" name="Collected" stroke="#38bdf8" strokeWidth={2} fill="url(#gradCollected)" dot={false} activeDot={{ r: 4, fill: '#38bdf8', stroke: '#0b0f18', strokeWidth: 2 }} />
-                <Area type="monotone" dataKey="externalPaid" name="External Paid" stroke="#a78bfa" strokeWidth={2} fill="url(#gradExternal)" dot={false} activeDot={{ r: 4, fill: '#a78bfa', stroke: '#0b0f18', strokeWidth: 2 }} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div className="h-55">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="gradCollected" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#38bdf8" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="gradExternal" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#a78bfa" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#a78bfa" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" />
+                  <XAxis dataKey="month" tick={{ fill: '#4b5565', fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: '#4b5565', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v/1000).toFixed(0)}k`} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area type="monotone" dataKey="collected" name="Collected" stroke="#38bdf8" strokeWidth={2} fill="url(#gradCollected)" dot={false} activeDot={{ r: 4, fill: '#38bdf8', stroke: '#0b0f18', strokeWidth: 2 }} />
+                  <Area type="monotone" dataKey="externalPaid" name="External Paid" stroke="#a78bfa" strokeWidth={2} fill="url(#gradExternal)" dot={false} activeDot={{ r: 4, fill: '#a78bfa', stroke: '#0b0f18', strokeWidth: 2 }} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           {/* Compliance Panel */}
-          <div style={{
-            background: 'linear-gradient(135deg, #141922 0%, #0f1318 100%)',
-            border: '1px solid #1e2535',
-            borderRadius: 14, padding: '24px',
-            display: 'flex', flexDirection: 'column'
-          }}>
-            <h3 style={{ color: '#f0f4ff', fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Payment Compliance</h3>
-            <p style={{ color: '#3d4e6a', fontSize: 12, margin: '0 0 28px' }}>Family contribution rate</p>
+          <div className="bg-linear-to-br from-gray-900 to-gray-950 dark:from-gray-800 dark:to-gray-900 border border-gray-800 dark:border-gray-700 rounded-xl p-6 flex flex-col">
+            <h3 className="text-gray-100 dark:text-gray-100 text-sm font-semibold mb-1.5">Payment Compliance</h3>
+            <p className="text-gray-500 dark:text-gray-600 text-xs mb-7">Family contribution rate</p>
 
             {/* Circular gauge */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
-              <div style={{ position: 'relative', width: 140, height: 140 }}>
+            <div className="flex justify-center mb-7">
+              <div className="relative w-35 h-35">
                 <svg width="140" height="140" viewBox="0 0 140 140">
-                  <circle cx="70" cy="70" r="58" fill="none" stroke="#1a2235" strokeWidth="10" />
+                  <circle cx="70" cy="70" r="58" fill="none" stroke="#1f2937" strokeWidth="10" />
                   <circle
                     cx="70" cy="70" r="58" fill="none"
                     stroke="url(#complianceGrad)"
@@ -330,42 +253,29 @@ export default function Dashboard() {
                     </linearGradient>
                   </defs>
                 </svg>
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center'
-                }}>
-                  <span style={{ fontSize: 28, fontWeight: 800, color: '#f0f4ff', lineHeight: 1 }}>{compliance}%</span>
-                  <span style={{ fontSize: 10, color: '#3d4e6a', marginTop: 4, letterSpacing: '0.5px' }}>COMPLIANT</span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-3xl font-extrabold text-gray-100 leading-none">{compliance}%</span>
+                  <span className="text-[10px] text-gray-500 mt-1 tracking-wide">COMPLIANT</span>
                 </div>
               </div>
             </div>
 
-            <div style={{
-              background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)',
-              borderRadius: 10, padding: '10px 14px',
-              color: '#34d399', fontSize: 12, fontWeight: 500,
-              textAlign: 'center', marginBottom: 16
-            }}>
+            <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-2.5 text-emerald-400 text-xs font-medium text-center mb-4">
               ✅ Healthy compliance rate
             </div>
 
-            <div style={{ marginTop: 'auto' }}>
+            <div className="mt-auto">
               {[
                 { label: 'Families Paid', value: paidFamilies, max: totalFamilies, color: '#34d399' },
                 { label: 'Outstanding', value: totalFamilies - paidFamilies, max: totalFamilies, color: '#ef4444' },
               ].map(({ label, value, max, color }) => (
-                <div key={label} style={{ marginBottom: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                    <span style={{ color: '#5a6a8a', fontSize: 11 }}>{label}</span>
-                    <span style={{ color: color, fontSize: 11, fontWeight: 600 }}>{value} / {max}</span>
+                <div key={label} className="mb-3">
+                  <div className="flex justify-between mb-1">
+                    <span className="text-gray-500 dark:text-gray-600 text-xs">{label}</span>
+                    <span className="text-xs font-semibold" style={{ color }}>{value} / {max}</span>
                   </div>
-                  <div style={{ height: 5, background: '#1a2235', borderRadius: 10 }}>
-                    <div style={{
-                      height: '100%', background: color, borderRadius: 10,
-                      width: `${(value / max) * 100}%`,
-                      transition: 'width 0.5s ease'
-                    }} />
+                  <div className="h-1.5 bg-gray-800 dark:bg-gray-700 rounded-full">
+                    <div className="h-full rounded-full transition-all duration-300" style={{ width: `${(value / max) * 100}%`, background: color }} />
                   </div>
                 </div>
               ))}
@@ -374,73 +284,49 @@ export default function Dashboard() {
         </div>
 
         {/* ── Recent Activity ── */}
-        <div style={{
-          background: 'linear-gradient(135deg, #141922 0%, #0f1318 100%)',
-          border: '1px solid #1e2535',
-          borderRadius: 14, padding: '24px'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div className="bg-linear-to-br from-gray-900 to-gray-950 dark:from-gray-800 dark:to-gray-900 border border-gray-800 dark:border-gray-700 rounded-xl p-6">
+          <div className="flex justify-between items-center mb-5">
             <div>
-              <h3 style={{ color: '#f0f4ff', fontSize: 15, fontWeight: 600, margin: 0 }}>Recent Transactions</h3>
-              <p style={{ color: '#3d4e6a', fontSize: 12, margin: '4px 0 0' }}>Latest activity across all accounts</p>
+              <h3 className="text-gray-100 dark:text-gray-100 text-sm font-semibold">Recent Transactions</h3>
+              <p className="text-gray-500 dark:text-gray-600 text-xs mt-1">Latest activity across all accounts</p>
             </div>
-            <button style={{
-              display: 'flex', alignItems: 'center', gap: 4,
-              background: 'transparent', border: '1px solid #1e2535',
-              borderRadius: 8, padding: '6px 14px',
-              color: '#38bdf8', fontSize: 12, fontWeight: 500, cursor: 'pointer'
-            }}>
+            <button className="flex items-center gap-1 bg-transparent border border-gray-800 dark:border-gray-700 rounded-lg px-3.5 py-1.5 text-sky-400 text-xs font-medium hover:bg-gray-800/50 transition-colors">
               View All <ChevronRight size={13} />
             </button>
           </div>
 
           {/* Table header */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: '44px 1fr 120px 130px 90px',
-            gap: 12, padding: '8px 12px',
-            borderBottom: '1px solid #1a2235', marginBottom: 4
-          }}>
+          <div className="grid grid-cols-[44px_1fr_120px_130px_90px] gap-3 px-3 py-2 border-b border-gray-800 dark:border-gray-700 mb-1">
             {['', 'Description', 'Amount', 'Date', 'Status'].map((h, i) => (
-              <span key={i} style={{ color: '#3d4e6a', fontSize: 10, fontWeight: 600, letterSpacing: '1px', textTransform: 'uppercase' }}>{h}</span>
+              <span key={i} className="text-gray-500 dark:text-gray-600 text-[10px] font-semibold uppercase tracking-wider">{h}</span>
             ))}
           </div>
 
           {recentActivities.map((activity, index) => (
             <div
               key={activity.id}
-              style={{
-                display: 'grid', gridTemplateColumns: '44px 1fr 120px 130px 90px',
-                gap: 12, padding: '14px 12px',
-                borderBottom: index < recentActivities.length - 1 ? '1px solid #111827' : 'none',
-                alignItems: 'center',
-                transition: 'background 0.15s',
-                borderRadius: 8,
-                cursor: 'default'
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = '#0f1318'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+              className="grid grid-cols-[44px_1fr_120px_130px_90px] gap-3 px-3 py-3.5 items-center border-b border-gray-900 dark:border-gray-800 last:border-0 rounded-lg hover:bg-gray-900/50 dark:hover:bg-gray-800/50 transition-colors cursor-default"
             >
               <ActivityIcon type={activity.type} />
               <div>
-                <p style={{ color: '#c8d5f0', fontSize: 13, fontWeight: 500, margin: 0 }}>{activity.description}</p>
-                <p style={{ color: '#3d4e6a', fontSize: 11, margin: '2px 0 0', textTransform: 'capitalize' }}>
+                <p className="text-gray-200 dark:text-gray-300 text-sm font-medium">{activity.description}</p>
+                <p className="text-gray-500 dark:text-gray-600 text-xs mt-0.5 capitalize">
                   {activity.type.replace(/_/g, ' ')}
                 </p>
               </div>
-              <span style={{ color: activity.amount ? '#f0f4ff' : '#3d4e6a', fontSize: 13, fontWeight: activity.amount ? 600 : 400 }}>
+              <span className={`text-sm ${activity.amount ? 'text-gray-100 font-semibold' : 'text-gray-500'}`}>
                 {activity.amount ? `$${activity.amount.toLocaleString()}` : '—'}
               </span>
-              <span style={{ color: '#3d4e6a', fontSize: 12 }}>{activity.date}</span>
+              <span className="text-gray-500 dark:text-gray-600 text-xs">{activity.date}</span>
               <StatusBadge status={activity.status} />
             </div>
           ))}
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: 24, textAlign: 'center' }}>
-          <p style={{ color: '#1e2535', fontSize: 11 }}>Family Fund Management System · Data refreshed in real-time</p>
+        <div className="mt-6 text-center">
+          <p className="text-gray-800 dark:text-gray-800 text-xs">Family Fund Management System · Data refreshed in real-time</p>
         </div>
-
       </div>
     </div>
   );

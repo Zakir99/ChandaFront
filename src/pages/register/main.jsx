@@ -18,40 +18,33 @@ import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import Swal from "sweetalert2";
+import useFetchData from "../../hooks/useFetchData";
 
 const PaymentTracker = () => {
   // Sample data with payment status: true (paid), false (unpaid), null (not present)
   const [members, setMembers] = useState([]);
-  const {year} = useParams();
+  const { year } = useParams();
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [searchTerm, setSearchTerm] = useState("");
   const [paymentModal, setPaymentModal] = useState(null);
   const [months, setMonths] = useState([]);
 
-  useEffect(() => {
-    const fetchRegisters = async () => {
-      try {
-        const response = await axios.get(
-          `${Config.apiUrl}registers/yearly/${year}`,
-        );
-        setMonths(response.data.months);
-        const formattedFamilies = response.data.families.map((f) => ({
-          ...f,
-          payments: f.payments.map((p) => ({
-            register_id: Number(p.register_id),
-            status: p.status,
-            id: p.id,
-          })),
-        }));
-
-        setMembers(formattedFamilies);
-      } catch (error) {
-        console.error("Failed to fetch registers:", error);
-      }
-    };
-    fetchRegisters();
-  }, []);
+  const { data, loading, error } = useFetchData({
+    url: "registers/yearly/" + year,
+    onSuccess: (data) => {
+      setMonths(data.months);
+      const formattedFamilies = data.families.map((f) => ({
+        ...f,
+        payments: f.payments.map((p) => ({
+          register_id: Number(p.register_id),
+          status: p.status,
+          id: p.id,
+        })),
+      }));
+      setMembers(formattedFamilies);
+    },
+  });
 
   // Calculate total due for a member
   const calculateTotalDue = (payments) => {
@@ -60,7 +53,7 @@ const PaymentTracker = () => {
         const month = months.find(
           (m) => Number(m.id) === Number(payment.register_id),
         );
-        return total + Number(month?.amount_per_member || 0);
+        return total + Number(month?.amount_per_family || 0);
       }
       return total;
     }, 0);
@@ -99,7 +92,6 @@ const PaymentTracker = () => {
   };
 
   const handlePaymentCancel = async (paymentId, memberId) => {
-
     const result = await Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
@@ -139,7 +131,6 @@ const PaymentTracker = () => {
       toast.error("Payment Cancellation failed!");
       console.error("Payment Cancellation failed:", error);
     }
-
   };
 
   const handlePayAll = async (memberId) => {
@@ -191,7 +182,7 @@ const PaymentTracker = () => {
   };
 
   const filteredMembers = members.filter((member) =>
-    member?.family_name?.toLowerCase().includes(searchTerm.toLowerCase()),
+    member?.name?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const totalPages = Math.ceil(filteredMembers.length / rowsPerPage);
@@ -222,7 +213,7 @@ const PaymentTracker = () => {
           const month = months.find(
             (m) => Number(m.id) === Number(payment.register_id),
           );
-          return sum + Number(month?.amount_per_member || 0);
+          return sum + Number(month?.amount_per_family || 0);
         }
         return sum;
       }, 0)
@@ -237,7 +228,7 @@ const PaymentTracker = () => {
           const month = months.find(
             (m) => Number(m.id) === Number(payment.register_id),
           );
-          return sum + Number(month?.amount_per_member || 0);
+          return sum + Number(month?.amount_per_family || 0);
         }
         return sum;
       }, 0)
@@ -245,31 +236,35 @@ const PaymentTracker = () => {
   }, 0);
 
   return (
-    <div className="min-h-screen bg-black p-6">
+    <div className="min-h-screen bg-white dark:bg-black p-6">
       {/* Header Section */}
       <div className="flex mb-8 justify-between">
         <div>
-          <h1 className="text-4xl font-bold  mb-2 bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold mb-2 bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             Payment Tracker
           </h1>
-          <p className="text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400">
             Track monthly payments and manage member contributions
           </p>
         </div>
-        <div className="border border-purple-300 p-3 rounded-2xl bg-">
-          <h1 className="text-4xl font-bold  mb-2 bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            2026
+        <div className="shadow-sm dark:border-purple-700 p-3 rounded-2xl">
+          <h1 className="text-4xl font-bold mb-2 bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            {year}
           </h1>
         </div>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl p-6 border border-gray-700/50 hover:border-blue-500/50 transition-all">
+        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl p-6  dark:border-gray-700/50 hover:border-blue-500/50 transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 mb-1">Total Members</p>
-              <p className="text-3xl font-bold text-white">{members.length}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                Total Members
+              </p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                {members.length}
+              </p>
             </div>
             <div className="bg-blue-500/20 p-3 rounded-lg">
               <UserPlus className="w-6 h-6 text-blue-400" />
@@ -277,11 +272,13 @@ const PaymentTracker = () => {
           </div>
         </div>
 
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl p-6 border border-gray-700/50 hover:border-green-500/50 transition-all">
+        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl p-6  dark:border-gray-700/50 hover:border-green-500/50 transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 mb-1">Total Revenue</p>
-              <p className="text-3xl font-bold text-green-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                Total Revenue
+              </p>
+              <p className="text-3xl font-bold text-green-600 dark:text-green-400">
                 Rs {totalRevenue.toLocaleString()}
               </p>
             </div>
@@ -292,11 +289,13 @@ const PaymentTracker = () => {
           <p className="text-xs text-gray-500 mt-2">{totalPaid} payments</p>
         </div>
 
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl p-6 border border-gray-700/50 hover:border-red-500/50 transition-all">
+        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl p-6  dark:border-gray-700/50 hover:border-red-500/50 transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 mb-1">Total Due</p>
-              <p className="text-3xl font-bold text-red-400">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                Total Due
+              </p>
+              <p className="text-3xl font-bold text-red-600 dark:text-red-400">
                 Rs {totalDue.toLocaleString()}
               </p>
             </div>
@@ -307,11 +306,15 @@ const PaymentTracker = () => {
           <p className="text-xs text-gray-500 mt-2">{totalUnpaid} unpaid</p>
         </div>
 
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl p-6 border border-gray-700/50 hover:border-purple-500/50 transition-all">
+        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl p-6  dark:border-gray-700/50 hover:border-purple-500/50 transition-all">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-400 mb-1">Collection Rate</p>
-              <p className="text-3xl font-bold text-white">{collectionRate}%</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                Collection Rate
+              </p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                {collectionRate}%
+              </p>
             </div>
             <div className="bg-purple-500/20 p-3 rounded-lg">
               <div className="text-2xl font-bold text-purple-400">%</div>
@@ -321,10 +324,10 @@ const PaymentTracker = () => {
       </div>
 
       {/* Actions Bar */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl border border-gray-700/50 mb-6 p-4">
+      <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl  dark:border-gray-700/50 mb-6 p-4">
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="relative w-full sm:w-96">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
             <input
               type="text"
               placeholder="Search members..."
@@ -333,12 +336,12 @@ const PaymentTracker = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-900/50 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white placeholder-gray-500"
+              className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-gray-900/50 shadow-sm dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
 
           <div className="flex gap-3 w-full sm:w-auto">
-            <button className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-700 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-all text-gray-300 hover:text-white">
+            <button className="flex items-center justify-center gap-2 px-4 py-2.5 shadow-sm dark:border-gray-700 bg-white dark:bg-gray-800/50 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
               <Filter className="w-4 h-4" />
               <span className="text-sm">Filter</span>
             </button>
@@ -351,26 +354,26 @@ const PaymentTracker = () => {
       </div>
 
       {/* Table Section */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl border border-gray-700/50 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-xl  dark:border-gray-700/50 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-900/50 border-b border-gray-700">
-                <th className="px-4 py-4 text-left text-sm font-semibold text-gray-300 w-16">
+              <tr className="bg-gray-50 dark:bg-gray-900/50  dark:border-gray-700">
+                <th className="px-4 py-4 text-left text-sm font-semibold text-gray-600 dark:text-gray-300 w-16">
                   #
                 </th>
-                <th className="px-4 py-4 text-left text-sm font-semibold text-gray-300 min-w-37.5">
+                <th className="px-4 py-4 text-left text-sm font-semibold text-gray-600 dark:text-gray-300 min-w-37.5">
                   Name
                 </th>
                 {months.map((month, index) => (
                   <th
                     key={index}
-                    className="px-3 py-4 text-center text-sm font-semibold text-gray-300 min-w-15"
+                    className="px-3 py-4 text-center text-sm font-semibold text-gray-600 dark:text-gray-300 min-w-15"
                   >
                     {month.month.toUpperCase().slice(0, 3)}
                   </th>
                 ))}
-                <th className="px-4 py-4 text-right text-sm font-semibold text-gray-300 min-w-30 sticky right-0 bg-gray-900/50">
+                <th className="px-4 py-4 text-right text-sm font-semibold text-gray-600 dark:text-gray-300 min-w-30 sticky right-0 bg-gray-50 dark:bg-gray-900/50">
                   Total Due
                 </th>
               </tr>
@@ -381,17 +384,17 @@ const PaymentTracker = () => {
                 return (
                   <tr
                     key={member.id}
-                    className="border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors"
+                    className=" dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
                   >
-                    <td className="px-4 py-4 text-sm text-gray-400">
+                    <td className="px-4 py-4 text-sm text-gray-500 dark:text-gray-400">
                       {startIndex + index + 1}
                     </td>
-                    <td className="px-4 py-4 text-sm font-medium text-white w-32 max-w-32">
+                    <td className="px-4 py-4 text-sm font-medium text-gray-900 dark:text-white w-32 max-w-32">
                       <div
                         className="truncate whitespace-nowrap overflow-hidden text-ellipsis"
-                        title={member.family_name}
+                        title={member.name}
                       >
-                        {member.family_name}
+                        {member.name}
                       </div>
                     </td>
 
@@ -406,11 +409,12 @@ const PaymentTracker = () => {
                       return (
                         <td key={month.id} className="px-3 py-4 text-center">
                           {status === "paid" ? (
-                            <button 
-                            onClick={() => {
-                              handlePaymentCancel(paymentId, member.id);
-                            }}
-                            className="inline-flex items-center justify-center w-8 h-8 bg-green-500/20 rounded-lg border border-green-500/50 cursor-pointer">
+                            <button
+                              onClick={() => {
+                                handlePaymentCancel(paymentId, member.id);
+                              }}
+                              className="inline-flex items-center justify-center w-8 h-8 bg-green-500/20 rounded-lg border border-green-500/50 cursor-pointer border-0"
+                            >
                               <Check className="w-4 h-4 text-green-400" />
                             </button>
                           ) : status === "unpaid" ? (
@@ -418,37 +422,37 @@ const PaymentTracker = () => {
                               onClick={() =>
                                 setPaymentModal({
                                   memberId: member.id,
-                                  memberName: member.family_name,
+                                  memberName: member.name,
                                   monthId: month.id,
                                   month: month,
                                   paymentId: paymentId,
                                   monthIndex: monthIndex,
                                 })
                               }
-                              className="inline-flex items-center justify-center w-8 h-8 bg-red-500/20 rounded-lg border border-red-500/50 hover:bg-red-500/30 transition-all cursor-pointer"
+                              className="inline-flex items-center justify-center w-8 h-8 bg-red-500/20 rounded-lg border border-red-500/50 hover:bg-red-500/30 transition-all cursor-pointer  border-0"
                             >
                               <X className="w-4 h-4 text-red-400" />
                             </button>
                           ) : (
-                            <div className="inline-flex items-center justify-center w-8 h-8 bg-gray-700/30 rounded-lg border border-gray-600/50">
-                              <Minus className="w-4 h-4 text-gray-500" />
+                            <div className="inline-flex items-center justify-center w-8 h-8 bg-gray-100 dark:bg-gray-700/30 rounded-lg shadow-sm dark:border-gray-600/50  border-0">
+                              <Minus className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                             </div>
                           )}
                         </td>
                       );
                     })}
 
-                    <td className="px-4 py-4 text-right sticky right-0 bg-linear-to-l from-gray-900 via-gray-900/95 to-transparent">
+                    <td className="px-4 py-4 text-right sticky right-0 bg-linear-to-l from-white via-white/95 to-transparent dark:from-gray-900 dark:via-gray-900/95 dark:to-transparent">
                       <div className="flex items-center justify-end gap-3">
                         {totalDue !== 0 && (
                           <button
                             onClick={() => {
                               handlePayAll(member.id);
                             }}
-                            className="group relative p-1.5 rounded-lg border border-gray-600 hover:border-green-400 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
+                            className="group relative p-1.5 rounded-lg shadow-sm dark:border-gray-600 hover:border-green-400 transition-all duration-200 hover:scale-110 active:scale-95 cursor-pointer"
                           >
-                            <Check className="w-4 h-4 text-gray-400 group-hover:text-green-400 transition-colors duration-200" />
-                            <span className="absolute -top-8 -right-2 text-xs bg-gray-800 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-gray-700">
+                            <Check className="w-4 h-4 text-gray-500 dark:text-gray-400 group-hover:text-green-400 transition-colors duration-200" />
+                            <span className="absolute -top-8 -right-2 text-xs bg-gray-800 dark:bg-gray-800 text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap border border-gray-700">
                               Mark all as paid
                             </span>
                           </button>
@@ -458,8 +462,8 @@ const PaymentTracker = () => {
                           <span
                             className={`text-base font-bold tabular-nums ${
                               totalDue > 0
-                                ? "text-red-400 bg-red-400/10 px-2 py-0.5 rounded-lg"
-                                : "text-green-400 bg-green-400/10 px-2 py-0.5 rounded-lg"
+                                ? "text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-400/10 px-2 py-0.5 rounded-lg"
+                                : "text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-400/10 px-2 py-0.5 rounded-lg"
                             }`}
                           >
                             Rs {totalDue.toLocaleString()}
@@ -475,9 +479,9 @@ const PaymentTracker = () => {
         </div>
 
         {/* Pagination */}
-        <div className="px-4 py-4 bg-gray-900/30 border-t border-gray-700">
+        <div className="px-4 py-4 bg-gray-50 dark:bg-gray-900/30  dark:border-gray-700">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-gray-400">
+            <div className="text-sm text-gray-600 dark:text-gray-400">
               Showing {startIndex + 1} to{" "}
               {Math.min(endIndex, filteredMembers.length)} of{" "}
               {filteredMembers.length} members
@@ -490,7 +494,7 @@ const PaymentTracker = () => {
                   setRowsPerPage(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="px-3 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-sm text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 bg-white dark:bg-gray-900/50 shadow-sm dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value={5}>5 rows</option>
                 <option value={10}>10 rows</option>
@@ -504,13 +508,13 @@ const PaymentTracker = () => {
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
                   disabled={currentPage === 1}
-                  className={`p-2 rounded-lg border border-gray-700 bg-gray-800/50 ${
+                  className={`p-2 rounded-lg shadow-sm dark:border-gray-700 bg-white dark:bg-gray-800/50 ${
                     currentPage === 1
                       ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-gray-700/50 text-gray-300"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300"
                   }`}
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-4 h-4 text-black dark:text-white" />
                 </button>
 
                 {[...Array(totalPages)].map((_, i) => {
@@ -528,7 +532,7 @@ const PaymentTracker = () => {
                         className={`px-3 py-1 rounded-lg text-sm ${
                           currentPage === pageNumber
                             ? "bg-linear-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/20"
-                            : "text-gray-400 hover:bg-gray-700/50 border border-gray-700 bg-gray-800/50"
+                            : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 shadow-sm dark:border-gray-700 bg-white dark:bg-gray-800/50"
                         }`}
                       >
                         {pageNumber}
@@ -539,7 +543,10 @@ const PaymentTracker = () => {
                     pageNumber === currentPage + 2
                   ) {
                     return (
-                      <span key={i} className="px-2 text-gray-600">
+                      <span
+                        key={i}
+                        className="px-2 text-gray-400 dark:text-gray-600"
+                      >
                         ...
                       </span>
                     );
@@ -552,13 +559,13 @@ const PaymentTracker = () => {
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
                   disabled={currentPage === totalPages}
-                  className={`p-2 rounded-lg border border-gray-700 bg-gray-800/50 ${
+                  className={`p-2 rounded-lg shadow-sm dark:border-gray-700 bg-white dark:bg-gray-800/50 ${
                     currentPage === totalPages
                       ? "opacity-50 cursor-not-allowed"
-                      : "hover:bg-gray-700/50 text-gray-300"
+                      : "hover:bg-gray-50 dark:hover:bg-gray-700/50 text-gray-700 dark:text-gray-300"
                   }`}
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-4 h-4 text-black dark:text-white" />
                 </button>
               </div>
             </div>
@@ -567,22 +574,22 @@ const PaymentTracker = () => {
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex items-center gap-6 text-sm text-gray-400">
+      <div className="mt-4 flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-green-500/20 rounded-lg border border-green-500/50 flex items-center justify-center">
-            <Check className="w-3 h-3 text-green-400" />
+          <div className="w-6 h-6 bg-green-500/20 rounded-lg border-0 flex items-center justify-center">
+            <Check className="w-3 h-3 text-green-400 " />
           </div>
-          <span>Paid</span>
+          <span>Paid (Click to cancel)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-red-500/20 rounded-lg border border-red-500/50 flex items-center justify-center">
+          <div className="w-6 h-6 bg-red-500/20 rounded-lg  flex items-center justify-center">
             <X className="w-3 h-3 text-red-400" />
           </div>
           <span>Due (Click to pay)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-gray-700/30 rounded-lg border border-gray-600/50 flex items-center justify-center">
-            <Minus className="w-3 h-3 text-gray-500" />
+          <div className="w-6 h-6 bg-gray-100 dark:bg-gray-700/30 rounded-lg  dark:border-gray-600/50 flex items-center justify-center">
+            <Minus className="w-3 h-3 text-gray-400 dark:text-gray-500" />
           </div>
           <span>Not Present</span>
         </div>
@@ -591,37 +598,45 @@ const PaymentTracker = () => {
       {/* Payment Modal */}
       {paymentModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-xl shadow-2xl border border-gray-700 max-w-md w-full p-6 animate-scale-in">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl  dark:border-gray-700 max-w-md w-full p-6 animate-scale-in">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-white">Process Payment</h3>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                Process Payment
+              </h3>
               <button
                 onClick={() => setPaymentModal(null)}
-                className="text-gray-400 cursor-pointer hover:text-white transition-colors"
+                className="text-gray-400 cursor-pointer hover:text-gray-600 dark:hover:text-white transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <div className="mb-6">
-              <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
-                <p className="text-sm text-gray-400">Member</p>
-                <p className="text-lg font-semibold text-white">
+              <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4  dark:border-gray-700">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Member
+                </p>
+                <p className="text-lg font-semibold text-gray-900 dark:text-white">
                   {paymentModal.memberName}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 mt-4">
-                <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
-                  <p className="text-sm text-gray-400">Month</p>
-                  <p className="text-lg font-semibold text-white">
+                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4  dark:border-gray-700">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Month
+                  </p>
+                  <p className="text-lg font-semibold text-gray-900 dark:text-white">
                     {paymentModal?.month?.month.charAt(0).toUpperCase() +
                       paymentModal?.month?.month.slice(1)}
                   </p>
                 </div>
-                <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
-                  <p className="text-sm text-gray-400">Amount</p>
-                  <p className="text-lg font-semibold text-green-400">
-                    Rs {paymentModal?.month?.amount_per_member}
+                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4  dark:border-gray-700">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Amount
+                  </p>
+                  <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                    Rs {paymentModal?.month?.amount_per_family}
                   </p>
                 </div>
               </div>
@@ -646,7 +661,7 @@ const PaymentTracker = () => {
 
               <button
                 onClick={() => setPaymentModal(null)}
-                className="w-full p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-all text-gray-300 text-sm cursor-pointer"
+                className="w-full p-3 bg-gray-100 dark:bg-gray-700/50 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-all text-gray-700 dark:text-gray-300 text-sm cursor-pointer"
               >
                 Cancel
               </button>

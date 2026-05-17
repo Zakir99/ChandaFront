@@ -1,11 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Search,
-  Users,
   ArrowLeft,
   CheckCircle,
   XCircle,
-  TrendingUp,
   AlertCircle,
   Calendar,
   History,
@@ -19,8 +17,6 @@ import {
   Check,
   Moon,
   Sun,
-  DollarSign,
-  Clock,
   X,
 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -29,6 +25,7 @@ import Config from "../../Js/Config";
 // import "./view.css";
 import { toast } from "react-toastify";
 import RegisterDashboard from "../../components/smallComponents";
+
 // Constants
 const ITEMS_PER_PAGE = 10;
 const MAX_VISIBLE_PAGES = 5;
@@ -57,16 +54,13 @@ const FilterButton = ({
   count,
   onClick,
   color,
-  isDark,
 }) => (
   <button
     onClick={() => onClick(filter)}
     className={`px-6 py-3 text-sm rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 ${
       currentFilter === filter
         ? `${color} text-white shadow-lg`
-        : isDark
-          ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+        : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
     }`}
   >
     {label} <span className="ml-1 opacity-75">({count})</span>
@@ -80,7 +74,6 @@ const PaymentHistoryItem = ({
   onSelect,
   formatDate,
   formatCurrency,
-  isDark,
 }) => {
   const canSelect = !isPaid;
   const isItemSelected = isSelected && canSelect;
@@ -90,16 +83,10 @@ const PaymentHistoryItem = ({
       onClick={() => canSelect && onSelect(payment)}
       className={`flex items-center justify-between p-5 rounded-2xl transition-all duration-300 cursor-pointer transform hover:scale-[1.02] ${
         isPaid
-          ? isDark
-            ? "bg-black border-gray-700 cursor-default border-2"
-            : "bg-white border-gray-200 cursor-default"
+          ? "bg-white border-gray-200 cursor-default dark:bg-black dark:border-gray-700"
           : isItemSelected
-            ? isDark
-              ? "bg-blue-900 border-blue-500 ring-2 ring-blue-500/50 shadow-lg shadow-blue-500/20 border-2"
-              : "bg-blue-50 border-blue-400 ring-2 ring-blue-200 shadow-lg"
-            : isDark
-              ? "bg-red-900 border-red-800 hover:border-red-600 border-2"
-              : "bg-red-50 border-red-300 hover:border-red-400"
+            ? "bg-blue-50 border-blue-400 ring-2 ring-blue-200 shadow-lg dark:bg-blue-900 dark:border-blue-500 dark:ring-2 dark:ring-blue-500/50 dark:shadow-lg dark:shadow-blue-500/20"
+            : "bg-red-50 border-red-300 hover:border-red-400 dark:bg-red-900 dark:border-red-800 dark:hover:border-red-600"
       }`}
     >
       <div className="flex items-center gap-4 flex-1">
@@ -108,9 +95,7 @@ const PaymentHistoryItem = ({
             className={`flex items-center justify-center w-6 h-6 rounded-lg transition-all duration-300 ${
               isItemSelected
                 ? "bg-blue-600 border-blue-600 shadow-lg shadow-blue-500/50"
-                : isDark
-                  ? "bg-gray-700 border-gray-600 border-2 "
-                  : "bg-white border-gray-300"
+                : "bg-white border-gray-300 dark:bg-gray-700 dark:border-gray-600"
             }`}
           >
             {isItemSelected && <Check className="w-4 h-4 text-white" />}
@@ -122,16 +107,10 @@ const PaymentHistoryItem = ({
             <p
               className={`font-bold text-base truncate ${
                 isPaid
-                  ? isDark
-                    ? "text-gray-200"
-                    : "text-gray-900"
+                  ? "text-gray-900 dark:text-gray-200"
                   : isItemSelected
-                    ? isDark
-                      ? "text-blue-300"
-                      : "text-blue-700"
-                    : isDark
-                      ? "text-white"
-                      : "text-red-700"
+                    ? "text-blue-700 dark:text-blue-300"
+                    : "text-red-700 dark:text-white"
               }`}
             >
               {payment.month?.charAt(0).toUpperCase() + payment.month?.slice(1)}
@@ -139,11 +118,7 @@ const PaymentHistoryItem = ({
             </p>
             {isPaid ? (
               <span
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                  isDark
-                    ? "bg-green-900/50 text-green-300 border border-green-700"
-                    : "bg-green-100 text-green-700"
-                }`}
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 dark:border dark:border-green-700`}
               >
                 <CheckCircle className="w-3.5 h-3.5" />
                 Paid
@@ -152,12 +127,8 @@ const PaymentHistoryItem = ({
               <span
                 className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
                   isItemSelected
-                    ? isDark
-                      ? "bg-blue-900/50 text-blue-300 border border-blue-700"
-                      : "bg-blue-100 text-blue-700"
-                    : isDark
-                      ? "bg-red-900/50 text-white border border-red-700"
-                      : "bg-red-100 text-red-700"
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300 dark:border dark:border-blue-700"
+                    : "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-white dark:border dark:border-red-700"
                 }`}
               >
                 <XCircle className="w-3.5 h-3.5" />
@@ -168,16 +139,10 @@ const PaymentHistoryItem = ({
           <p
             className={`text-sm ${
               isPaid
-                ? isDark
-                  ? "text-gray-400"
-                  : "text-gray-600"
+                ? "text-gray-600 dark:text-gray-400"
                 : isItemSelected
-                  ? isDark
-                    ? "text-blue-400"
-                    : "text-blue-600"
-                  : isDark
-                    ? "text-red-400"
-                    : "text-red-600"
+                  ? "text-blue-600 dark:text-blue-400"
+                  : "text-red-600 dark:text-red-400"
             }`}
           >
             {isPaid ? (
@@ -193,34 +158,22 @@ const PaymentHistoryItem = ({
         <span
           className={`text-xl font-bold ${
             isPaid
-              ? isDark
-                ? "text-gray-200"
-                : "text-gray-900"
+              ? "text-gray-900 dark:text-gray-200"
               : isItemSelected
-                ? isDark
-                  ? "text-blue-300"
-                  : "text-blue-700"
-                : isDark
-                  ? "text-white"
-                  : "text-red-700"
+                ? "text-blue-700 dark:text-blue-300"
+                : "text-red-700 dark:text-white"
           }`}
         >
           {formatCurrency(payment.amount)}
         </span>
         {isPaid ? (
-          <CheckCircle
-            className={`w-6 h-6 ${isDark ? "text-green-400" : "text-green-500"}`}
-          />
+          <CheckCircle className="w-6 h-6 text-green-500 dark:text-green-400" />
         ) : (
           <XCircle
             className={`w-6 h-6 ${
               isItemSelected
-                ? isDark
-                  ? "text-blue-400"
-                  : "text-blue-500"
-                : isDark
-                  ? "text-red-400"
-                  : "text-red-500"
+                ? "text-blue-500 dark:text-blue-400"
+                : "text-red-500 dark:text-red-400"
             }`}
           />
         )}
@@ -234,12 +187,6 @@ const MonthlyRegistersView = () => {
   const navigate = useNavigate();
   const { id } = useParams();
 
-  // Dark Mode State
-  const [isDark, setIsDark] = useState(() => {
-    const saved = localStorage.getItem("darkMode");
-    return saved ? JSON.parse(saved) : true;
-  });
-
   // State Management
   const [register, setRegister] = useState(null);
   const [families, setFamilies] = useState([]);
@@ -252,15 +199,6 @@ const MonthlyRegistersView = () => {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState({ type: "", text: "" });
   const [showFilters, setShowFilters] = useState(false);
-  // Dark Mode Effect
-  useEffect(() => {
-    localStorage.setItem("darkMode", JSON.stringify(isDark));
-    if (isDark) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDark]);
 
   // Derived State
   const paidFamilies = useMemo(
@@ -504,18 +442,10 @@ const MonthlyRegistersView = () => {
   // Loading State
   if (!register) {
     return (
-      <div
-        className={`min-h-screen flex items-center justify-center ${
-          isDark ? "bg-gray-900" : "bg-linear-to-br from-gray-50 to-gray-100"
-        }`}
-      >
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-gray-50 to-gray-100 dark:bg-gray-900">
         <div className="text-center">
-          <Loader2
-            className={`w-12 h-12 animate-spin mx-auto mb-4 ${
-              isDark ? "text-blue-400" : "text-blue-600"
-            }`}
-          />
-          <p className={isDark ? "text-gray-400" : "text-gray-600"}>
+          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-blue-600 dark:text-blue-400" />
+          <p className="text-gray-600 dark:text-gray-400">
             Loading register data...
           </p>
         </div>
@@ -524,28 +454,14 @@ const MonthlyRegistersView = () => {
   }
 
   return (
-    <div
-      className={`min-h-screen transition-colors duration-300 ${
-        isDark
-          ? "bg-linear-to-br from-gray-900 via-gray-800 to-gray-900"
-          : "bg-linear-to-br from-gray-50 via-blue-50 to-gray-100"
-      }`}
-    >
+    <div className="min-h-screen transition-colors duration-300 bg-linear-to-br from-gray-50 via-blue-50 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Header Section */}
-      <div
-        className={`${
-          isDark ? "bg-black border-b " : "bg-white/80 border-gray-200"
-        } backdrop-blur-lg shadow-lg top-0`}
-      >
+      <div className="bg-white/80 border-gray-200 backdrop-blur-lg shadow-lg dark:bg-black dark:border-gray-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between mb-6">
             <button
               onClick={goToList}
-              className={`group flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 ${
-                isDark
-                  ? "text-gray-300 hover:text-white bg-gray-700 hover:bg-gray-600"
-                  : "text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200"
-              }`}
+              className="group flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-300 transform hover:scale-105 bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
             >
               <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               <span className="text-sm font-semibold">Back to Registers</span>
@@ -553,61 +469,28 @@ const MonthlyRegistersView = () => {
 
             <div className="space-x-4">
               <button
-                className={`p-3 rounded-xl transition-all duration-300 transform hover:scale-110 ${
-                  isDark
-                    ? "bg-gray-700 hover:bg-gray-600 text-yellow-400"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                }`}
+                className="p-3 rounded-xl transition-all duration-300 transform hover:scale-110 bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-yellow-400"
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Filter className="w-5 h-5" />
-              </button>
-
-              <button
-                onClick={() => setIsDark(!isDark)}
-                className={`p-3 rounded-xl transition-all duration-300 transform hover:scale-110 ${
-                  isDark
-                    ? "bg-gray-700 hover:bg-gray-600 text-yellow-400"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                }`}
-              >
-                {isDark ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Moon className="w-5 h-5" />
-                )}
               </button>
             </div>
           </div>
 
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1
-                className={`text-4xl font-bold mb-3 ${
-                  isDark ? "text-white" : "text-gray-900"
-                }`}
-              >
+              <h1 className="text-4xl font-bold mb-3 text-gray-900 dark:text-white">
                 {register.month.charAt(0).toUpperCase() +
                   register.month.slice(1)}{" "}
                 {register.year}
               </h1>
-              <div
-                className={`flex items-center gap-2 text-sm ${
-                  isDark ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <Calendar className="w-4 h-4" />
                 <span>Register Date: {formatDate(register.date)}</span>
               </div>
             </div>
 
-            <button
-              className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg ${
-                isDark
-                  ? "bg-blue-600 hover:bg-blue-500 text-white"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
-              }`}
-            >
+            <button className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg bg-blue-600 hover:bg-blue-700 text-white">
               <Download className="w-5 h-5" />
               <span>Export Report</span>
             </button>
@@ -615,50 +498,29 @@ const MonthlyRegistersView = () => {
         </div>
       </div>
 
-      <div
-        className={`max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 ${isDark ? "bg-black" : "bg-white"}`}
-      >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-white dark:bg-black">
         {showFilters && (
           <RegisterDashboard
             register={register}
             families={families}
-            isDark={isDark}
           />
         )}
         {/* Filters Section */}
-        <div
-          className={`rounded-2xl shadow-lg p-6 mb-8  ${
-            isDark
-              ? "bg-black border-gray-700 border"
-              : "bg-white border-gray-200"
-          }`}
-        >
+        <div className="rounded-2xl shadow-lg p-6 mb-8 bg-white border-gray-200 dark:bg-black dark:border-gray-700 dark:border">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="relative flex-1">
-              <Search
-                className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
-                  isDark ? "text-gray-500" : "text-gray-400"
-                }`}
-              />
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 placeholder="Search families..."
                 value={detailSearchTerm}
                 onChange={(e) => setDetailSearchTerm(e.target.value)}
-                className={`w-full pl-12 pr-4 py-3 rounded-xl shadow-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  isDark
-                    ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400 border-2"
-                    : "bg-white border-gray-200 text-gray-900 placeholder-gray-500"
-                }`}
+                className="w-full pl-12 pr-4 py-3 rounded-xl shadow-sm transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white border-gray-200 text-gray-900 placeholder-gray-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
               />
             </div>
 
             <div className="flex items-center gap-3">
-              <div
-                className={`flex items-center gap-2 ${
-                  isDark ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
                 <Filter className="w-5 h-5" />
                 <span className="text-sm font-semibold">Filter:</span>
               </div>
@@ -670,7 +532,6 @@ const MonthlyRegistersView = () => {
                   count={families.length}
                   onClick={setPaymentFilter}
                   color="bg-blue-600"
-                  isDark={isDark}
                 />
                 <FilterButton
                   filter="paid"
@@ -679,7 +540,6 @@ const MonthlyRegistersView = () => {
                   count={paidFamilies.length}
                   onClick={setPaymentFilter}
                   color="bg-green-600"
-                  isDark={isDark}
                 />
                 <FilterButton
                   filter="not_paid"
@@ -688,17 +548,12 @@ const MonthlyRegistersView = () => {
                   count={unpaidFamilies.length}
                   onClick={setPaymentFilter}
                   color="bg-red-600"
-                  isDark={isDark}
                 />
               </div>
             </div>
           </div>
 
-          <div
-            className={`mt-4 flex items-center justify-between text-sm ${
-              isDark ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
+          <div className="mt-4 flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
             <span>
               Showing {indexOfFirstItem + 1} to{" "}
               {Math.min(indexOfLastItem, filteredFamilies.length)} of{" "}
@@ -708,78 +563,40 @@ const MonthlyRegistersView = () => {
         </div>
 
         {/* Desktop Table */}
-        <div
-          className={`hidden md:block rounded-2xl shadow-lg overflow-hidden  ${
-            isDark
-              ? "bg-black border-gray-700 border"
-              : "bg-white border-gray-200"
-          }`}
-        >
+        <div className="hidden md:block rounded-2xl shadow-lg overflow-hidden bg-white border-gray-200 dark:bg-black dark:border-gray-700 dark:border">
           <table className="w-full">
-            <thead className={isDark ? "bg-gray-900/50" : "bg-gray-50"}>
+            <thead className="bg-gray-50 dark:bg-gray-900/50">
               <tr>
-                <th
-                  className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
+                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Family Name
                 </th>
-                <th
-                  className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
+                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Total
                 </th>
-                <th
-                  className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
+                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Payment Status
                 </th>
-                <th
-                  className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
+                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Status
                 </th>
-                <th
-                  className={`px-12 py-4 text-left text-xs font-bold uppercase tracking-wider ${
-                    isDark ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
+                <th className="px-12 py-4 text-left text-xs font-bold uppercase tracking-wider text-gray-700 dark:text-gray-300">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody
-              className={`divide-y ${isDark ? "divide-gray-700" : "divide-gray-100"}`}
-            >
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {currentFamilies.map((family) => (
                 <tr
                   key={family.id}
-                  className={`transition-colors duration-200 border-0 shadow-sm ${
-                    isDark ? "hover:bg-gray-700/50" : "hover:bg-gray-50"
-                  }`}
+                  className="transition-colors duration-200 border-0 shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700/50"
                 >
                   <td className="px-6 py-5">
-                    <span
-                      className={`text-sm font-bold ${
-                        isDark ? "text-gray-200" : "text-gray-900"
-                      }`}
-                    >
+                    <span className="text-sm font-bold text-gray-900 dark:text-gray-200">
                       {family.family_name}
                     </span>
                   </td>
                   <td className="px-6 py-5">
-                    <span
-                      className={`text-sm font-bold ${
-                        isDark ? "text-gray-200" : "text-gray-900"
-                      }`}
-                    >
+                    <span className="text-sm font-bold text-gray-900 dark:text-gray-200">
                       {formatCurrency(
                         family.unpaid_breakdown.reduce(
                           (sum, payment) => sum + payment.amount,
@@ -790,24 +607,12 @@ const MonthlyRegistersView = () => {
                   </td>
                   <td className="px-6 py-5">
                     {family.payment_status === "paid" ? (
-                      <span
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold ${
-                          isDark
-                            ? "bg-green-900/50 text-green-300 border border-green-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
+                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 dark:border dark:border-green-700">
                         <CheckCircle className="w-4 h-4" />
                         Paid
                       </span>
                     ) : (
-                      <span
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold ${
-                          isDark
-                            ? "bg-red-900/50 text-white border border-red-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
+                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-white dark:border dark:border-red-700">
                         <XCircle className="w-4 h-4" />
                         Unpaid
                       </span>
@@ -815,24 +620,12 @@ const MonthlyRegistersView = () => {
                   </td>
                   <td className="px-6 py-4">
                     {family.status === "active" ? (
-                      <span
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold ${
-                          isDark
-                            ? "bg-green-900/50 text-green-300 border border-green-700"
-                            : "bg-green-100 text-green-700"
-                        }`}
-                      >
+                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 dark:border dark:border-green-700">
                         <CheckCircle className="w-4 h-4" />
                         Active
                       </span>
                     ) : (
-                      <span
-                        className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold ${
-                          isDark
-                            ? "bg-red-900/50 text-white border border-red-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
+                      <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-white dark:border dark:border-red-700">
                         <XCircle className="w-4 h-4" />
                         Deactive
                       </span>
@@ -843,9 +636,7 @@ const MonthlyRegistersView = () => {
                       onClick={() => openPaymentModal(family)}
                       className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-md ${
                         family.paid
-                          ? isDark
-                            ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          ? "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                           : "bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/50"
                       }`}
                     >
@@ -859,28 +650,12 @@ const MonthlyRegistersView = () => {
           </table>
 
           {currentFamilies.length === 0 && (
-            <div
-              className={`text-center py-16 ${
-                isDark ? "bg-black" : "bg-gray-50"
-              }`}
-            >
-              <AlertCircle
-                className={`w-20 h-20 mx-auto mb-4 ${
-                  isDark ? "text-gray-600" : "text-gray-300"
-                }`}
-              />
-              <p
-                className={`text-lg font-bold mb-2 ${
-                  isDark ? "text-gray-300" : "text-gray-500"
-                }`}
-              >
+            <div className="text-center py-16 bg-gray-50 dark:bg-black">
+              <AlertCircle className="w-20 h-20 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <p className="text-lg font-bold mb-2 text-gray-500 dark:text-gray-300">
                 No families found
               </p>
-              <p
-                className={`text-sm ${
-                  isDark ? "text-gray-500" : "text-gray-400"
-                }`}
-              >
+              <p className="text-sm text-gray-400 dark:text-gray-500">
                 Try adjusting your search or filters
               </p>
             </div>
@@ -890,30 +665,12 @@ const MonthlyRegistersView = () => {
         {/* Mobile Cards */}
         <div className="md:hidden space-y-4">
           {currentFamilies.length === 0 ? (
-            <div
-              className={`rounded-2xl p-12 text-center  ${
-                isDark
-                  ? "bg-black border-gray-700 border"
-                  : "bg-white border-gray-200"
-              }`}
-            >
-              <AlertCircle
-                className={`w-16 h-16 mx-auto mb-4 ${
-                  isDark ? "text-gray-600" : "text-gray-300"
-                }`}
-              />
-              <p
-                className={`text-lg font-bold mb-2 ${
-                  isDark ? "text-gray-300" : "text-gray-500"
-                }`}
-              >
+            <div className="rounded-2xl p-12 text-center bg-white border-gray-200 dark:bg-black dark:border-gray-700">
+              <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <p className="text-lg font-bold mb-2 text-gray-500 dark:text-gray-300">
                 No families found
               </p>
-              <p
-                className={`text-sm ${
-                  isDark ? "text-gray-500" : "text-gray-400"
-                }`}
-              >
+              <p className="text-sm text-gray-400 dark:text-gray-500">
                 Try adjusting your search or filters
               </p>
             </div>
@@ -921,26 +678,14 @@ const MonthlyRegistersView = () => {
             currentFamilies.map((family) => (
               <div
                 key={family.id}
-                className={`rounded-2xl shadow-lg p-5 border transition-all duration-300 ${
-                  isDark
-                    ? "bg-black border-gray-700"
-                    : "bg-white border-gray-200"
-                }`}
+                className="rounded-2xl shadow-lg p-5 border transition-all duration-300 bg-white border-gray-200 dark:bg-black dark:border-gray-700"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1 min-w-0 mr-3">
-                    <h3
-                      className={`font-bold text-base mb-1 truncate ${
-                        isDark ? "text-gray-200" : "text-gray-900"
-                      }`}
-                    >
+                    <h3 className="font-bold text-base mb-1 truncate text-gray-900 dark:text-gray-200">
                       {family.family_name}
                     </h3>
-                    <p
-                      className={`text-lg font-bold ${
-                        isDark ? "text-gray-300" : "text-gray-900"
-                      }`}
-                    >
+                    <p className="text-lg font-bold text-gray-900 dark:text-gray-300">
                       {formatCurrency(
                         family.paid
                           ? family.amount_paid
@@ -949,24 +694,12 @@ const MonthlyRegistersView = () => {
                     </p>
                   </div>
                   {family.payment_status == "paid" ? (
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${
-                        isDark
-                          ? "bg-green-900/50 text-green-300 border border-green-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
-                    >
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 dark:border dark:border-green-700">
                       <CheckCircle className="w-4 h-4" />
                       Paid
                     </span>
                   ) : (
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${
-                        isDark
-                          ? "bg-red-900/50 text-red-300 border border-red-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300 dark:border dark:border-red-700">
                       <XCircle className="w-4 h-4" />
                       Unpaid
                     </span>
@@ -976,9 +709,7 @@ const MonthlyRegistersView = () => {
                   onClick={() => openPaymentModal(family)}
                   className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 transform active:scale-95 ${
                     family.paid
-                      ? isDark
-                        ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                       : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/50"
                   }`}
                 >
@@ -992,20 +723,12 @@ const MonthlyRegistersView = () => {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div
-            className={`mt-8 rounded-2xl shadow-lg p-4 border ${
-              isDark ? "bg-black border-gray-700" : "bg-white border-gray-200"
-            }`}
-          >
+          <div className="mt-8 rounded-2xl shadow-lg p-4 border bg-white border-gray-200 dark:bg-black dark:border-gray-700">
             <div className="flex items-center justify-between gap-2">
               <button
                 onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
-                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  isDark
-                    ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span className="hidden sm:inline">Previous</span>
@@ -1016,9 +739,7 @@ const MonthlyRegistersView = () => {
                   page === "..." ? (
                     <span
                       key={`ellipsis-${index}`}
-                      className={`px-2 ${
-                        isDark ? "text-gray-500" : "text-gray-400"
-                      }`}
+                      className="px-2 text-gray-400 dark:text-gray-500"
                     >
                       ...
                     </span>
@@ -1029,9 +750,7 @@ const MonthlyRegistersView = () => {
                       className={`w-10 h-10 rounded-xl text-sm font-bold transition-all duration-300 transform hover:scale-110 ${
                         currentPage === page
                           ? "bg-blue-600 text-white shadow-lg shadow-blue-500/50"
-                          : isDark
-                            ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
                       }`}
                     >
                       {page}
@@ -1043,11 +762,7 @@ const MonthlyRegistersView = () => {
               <button
                 onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
-                className={`flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed ${
-                  isDark
-                    ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                className="flex items-center gap-2 px-5 py-2.5 text-sm font-bold rounded-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
               >
                 <span className="hidden sm:inline">Next</span>
                 <ChevronRight className="w-4 h-4" />

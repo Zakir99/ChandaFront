@@ -1,6 +1,6 @@
 const Config = {
     apiUrl: 'http://localhost:3000/',
-    // apiUrl: 'http://192.168.0.189:3000/',
+    // apiUrl: 'http://192.168.0.188:3000/',
     // apiUrl: 'http://192.168.100.33:3000/',
     tokenKey: 'authToken', // Use consistent key
     
@@ -13,6 +13,9 @@ const Config = {
     }),
     imageUrl: 'http://localhost:8000/storage/',
     currency: 'Rs. ',
+    FamilyPrefix: 'Family/',
+    AdminPrefix: 'Admin/',
+    SuperAdminPrefix: 'SuperAdmin/',
 }
 
 export default Config;

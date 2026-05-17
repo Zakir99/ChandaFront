@@ -18,8 +18,8 @@ const PaymentModal = ({
   const { support, families = [] } = data;
 
   const calculateTotalAmount = () => {
-    if (support.amount_per_member && support.amount_per_member !== "0.00") {
-      const amountPerMember = parseFloat(support.amount_per_member);
+    if (support.amount_per_family && support.amount_per_family !== "0.00") {
+      const amountPerMember = parseFloat(support.amount_per_family);
       const familyCount = families.filter(f => f.status === 'paid').length;
       return (amountPerMember * familyCount).toFixed(2);
     }
@@ -132,7 +132,7 @@ const PaymentModal = ({
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Amount per Member</p>
                   <p className="font-bold text-xl bg-linear-to-r from-emerald-400 to-blue-400 bg-clip-text text-transparent">
-                    Rs {support.amount_per_member || '0.00'}
+                    Rs {support.amount_per_family || '0.00'}
                   </p>
                 </div>
               </div>

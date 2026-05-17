@@ -1,25 +1,8 @@
 import { useState, useEffect } from "react";
 import {
-  ArrowLeft,
-  Users,
-  FileText,
-  CheckCircle,
-  XCircle,
-  MapPin,
-  Edit,
-  Check,
-  Clock,
-  Download,
-  Filter,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Moon,
-  Sun,
-  TrendingUp,
-  Calendar,
-  DollarSign,
-  X,
+  ArrowLeft, Users, FileText, CheckCircle, XCircle,
+  MapPin, Edit, Check, Clock, Download, Filter,
+  ChevronDown, ChevronLeft, ChevronRight, X,
 } from "lucide-react";
 import Config from "../../Js/Config";
 import axios from "axios";
@@ -27,706 +10,396 @@ import { toast } from "react-toastify";
 import { useParams, useNavigate } from "react-router-dom";
 import generatePDF from "../../components/supportPdf";
 import PaymentModal from "../../components/PaymentModal.jsx";
+import useFetchData from "../../hooks/useFetchData.js";
 
 const DeathSupportView = () => {
-  const [record, setRecord] = useState([]);
-  const [families, setFamilies] = useState([]);
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [record, setRecord]                       = useState([]);
+  const [data, setData]                           = useState([]);
+  const [families, setFamilies]                   = useState([]);
+  const [searchTerm, setSearchTerm]               = useState("");
   const [processingPayment, setProcessingPayment] = useState(null);
-  const [paymentFilter, setPaymentFilter] = useState("all");
-  const [showFilters, setShowFilters] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [generatingPdf, setGeneratingPdf] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [paymentFilter, setPaymentFilter]         = useState("all");
+  const [showFilters, setShowFilters]             = useState(false);
+  const [currentPage, setCurrentPage]             = useState(1);
+  const [generatingPdf, setGeneratingPdf]         = useState(false);
+  const [isModalOpen, setIsModalOpen]             = useState(false);
   const itemsPerPage = 10;
   const navigate = useNavigate();
-  const { id } = useParams();
+  const { id }   = useParams();
 
-  useEffect(() => {
-    const fetchSupport = async () => {
-      const response = await axios.get(`${Config.apiUrl}support/${id}`);
-      setFamilies(response.data.families);
-      setRecord(response.data.support);
-      setData(response.data);
-      setLoading(false);
-    };
-    fetchSupport();
-  }, []);
+  useFetchData({
+    url: "supports/" + id,
+    onSuccess: (res) => {
+      setFamilies(res.families || []);
+      setRecord(res.support   || []);
+      setData(res             || []);
+    },
+  });
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      setDarkMode(true);
-      document.documentElement.classList.add("dark");
-    }
-  }, []);
-
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    if (!darkMode) {
-      document.documentElement.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
+  const formatDate = (d) => {
+    if (!d) return "—";
+    return new Date(d).toLocaleDateString("en-US", {
+      year: "numeric", month: "short", day: "numeric",
+      hour: "2-digit", minute: "2-digit",
     });
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
+  const fmt = (n) =>
+    new Intl.NumberFormat("en-PK", { style: "currency", currency: "PKR" }).format(n);
 
-  const handleMarkAsPaid = async (familyId, paymentId) => {
+  const handleMarkAsPaid = async (familyId) => {
     setProcessingPayment(familyId);
-
     try {
-      await axios.post(`${Config.apiUrl}payment/payUser`, {
-        support_id: record.id,
-        family_id: familyId,
-      });
-
-      setFamilies((prev) =>
-        prev.map((family) =>
-          family.id === familyId
-            ? {
-                ...family,
-                status: "paid",
-                payment_id: null,
-                amount: 0,
-              }
-            : family,
-        ),
-      );
-
-      toast.success("Family marked as paid successfully!");
-    } catch (error) {
-      toast.error("Error marking family as paid!");
-    } finally {
-      setProcessingPayment(null);
-    }
+      await axios.post(`${Config.apiUrl}payment/payUser`, { support_id: record.id, family_id: familyId });
+      setFamilies((p) => p.map((f) => f.id === familyId ? { ...f, status: "paid", payment_id: null, amount: 0 } : f));
+      toast.success("Marked as paid.");
+    } catch { toast.error("Error marking as paid."); }
+    finally  { setProcessingPayment(null); }
   };
 
   const handleCancelPayment = async (familyId, paymentId) => {
     setProcessingPayment(familyId);
-
     try {
-      await axios.post(`${Config.apiUrl}payment/cancelPayUser`, {
-        support_id: record.id,
-        family_id: familyId,
-        payment_id: paymentId,
-      });
-
-      setFamilies((prev) =>
-        prev.map((family) =>
-          family.id === familyId
-            ? {
-                ...family,
-                status: "unpaid",
-                payment_id: null,
-                amount: 0,
-              }
-            : family,
-        ),
-      );
-
-      toast.success("Family marked as unpaid successfully!");
-    } catch (error) {
-      toast.error("Error marking family as unpaid!");
-    } finally {
-      setProcessingPayment(null);
-    }
+      await axios.post(`${Config.apiUrl}payment/cancelPayUser`, { support_id: record.id, family_id: familyId, payment_id: paymentId });
+      setFamilies((p) => p.map((f) => f.id === familyId ? { ...f, status: "unpaid", payment_id: null, amount: 0 } : f));
+      toast.success("Payment cancelled.");
+    } catch { toast.error("Error cancelling payment."); }
+    finally  { setProcessingPayment(null); }
   };
 
-  const paidfamilies = families?.filter((m) => m.status == "paid").length ?? 0;
-  const totalfamilies = families?.length ?? 0;
-  const totalCollected = paidfamilies * (record?.amount_per_member || 0);
-  const totalExpected = totalfamilies * (record?.amount_per_member || 0);
+  const paid      = families?.filter((f) => f.status === "paid").length ?? 0;
+  const total     = families?.length ?? 0;
+  const collected = paid  * (record?.amount_per_family || 0);
+  const expected  = total * (record?.amount_per_family || 0);
+  const pct       = expected > 0 ? Math.round((collected / expected) * 100) : 0;
 
-  const filteredfamilies = families?.filter((family) => {
-    if (searchTerm !== "") {
-      const regex = new RegExp(searchTerm, "i");
-      if (!regex.test(family.family_name)) return false;
-    }
-
-    if (paymentFilter === "paid") return family.paid;
-    if (paymentFilter === "unpaid") return !family.paid;
+  const filtered = families?.filter((f) => {
+    if (searchTerm && !new RegExp(searchTerm, "i").test(f.name)) return false;
+    if (paymentFilter === "paid")   return f.status === "paid";
+    if (paymentFilter === "unpaid") return f.status !== "paid";
     return true;
   });
 
-  const totalPages = Math.ceil(filteredfamilies?.length / itemsPerPage);
+  const totalPages = Math.ceil(filtered?.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedfamilies = filteredfamilies?.slice(
-    startIndex,
-    startIndex + itemsPerPage,
-  );
+  const paginated  = filtered?.slice(startIndex, startIndex + itemsPerPage);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [paymentFilter]);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent"></div>
-      </div>
-    );
-  }
-
-  if (!record) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
-        <div className="max-w-4xl mx-auto text-center py-12">
-          <div className="w-20 h-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-            <XCircle size={40} className="text-gray-400 dark:text-gray-500" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Record not found
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            The requested death support record does not exist.
-          </p>
-          <button
-            onClick={() => window.history.back()}
-            className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
-          >
-            <ArrowLeft size={20} className="mr-2" />
-            Back to List
-          </button>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => { setCurrentPage(1); }, [paymentFilter, searchTerm]);
 
   const handlePdf = async () => {
     setGeneratingPdf(true);
-    await generatePDF({
-      record,
-      families,
-      setGeneratingPdf,
-      paidfamilies,
-      totalfamilies,
-      totalExpected,
-      totalCollected,
-    });
+    await generatePDF({ record, families, setGeneratingPdf, paidfamilies: paid, totalfamilies: total, totalExpected: expected, totalCollected: collected });
     setGeneratingPdf(false);
   };
 
-  const getBgClass = (paid) => {
-    return paid
-      ? "from-green-500 to-green-600 dark:from-green-700 dark:to-green-800"
-      : "from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900";
-  };
+  if (!record) return (
+    <div className="min-h-screen bg-white dark:bg-[#0c0c0e] flex items-center justify-center">
+      <div className="text-center space-y-3">
+        <XCircle className="mx-auto text-gray-300 dark:text-gray-700" size={40} />
+        <p className="text-sm text-gray-500 dark:text-gray-400">Record not found</p>
+        <button onClick={() => window.history.back()}
+          className="text-xs text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 flex items-center gap-1 mx-auto transition-colors">
+          <ArrowLeft size={13} /> Go back
+        </button>
+      </div>
+    </div>
+  );
 
-  const closeModal = () => setIsModalOpen(false);
+  /* ─── shared card style (no border in light, subtle bg in dark) ─── */
+  const card = "bg-white dark:bg-[#18181b] rounded-2xl";
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      {/* Header */}
-      <div
-        className={`bg-linear-to-r ${getBgClass(record.paid_at)} text-white shadow-xl top-0`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-6">
-          <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => window.history.back()}
-              className="inline-flex items-center text-white hover:text-blue-100 transition-colors"
-            >
-              <ArrowLeft size={20} className="mr-2" />
-              <span className="font-medium hidden sm:inline">Back</span>
+    <div className="min-h-screen  dark:bg-[#0c0c0e] transition-colors duration-200">
+
+      {/* ─── Slim topbar ─── */}
+      <header className=" dark:bg-[#0c0c0e] sticky top-0 z-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-8 flex items-center justify-between h-14">
+          <button onClick={() => window.history.back()}
+            className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors font-medium">
+            <ArrowLeft size={15} /> Back
+          </button>
+
+          <div className="flex items-center gap-2">
+            {!record.paid_at && (
+              <button onClick={() => setIsModalOpen(true)}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors shadow-sm">
+                <CheckCircle size={13} /> Mark Complete
+              </button>
+            )}
+            <button onClick={() => navigate(`/Admin/support/${record.uuid}/edit`)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-white dark:bg-accent text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-[#222226] transition-colors shadow-sm">
+              <Edit size={13} /> Edit
             </button>
-
-            <div className="flex items-center gap-2">
-              {!record.paid_at && (
-                <button
-                  onClick={() => setIsModalOpen(true)}
-                  className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-                  aria-label="Mark as Paid"
-                >
-                  <CheckCircle size={20} />
-                </button>
-              )}
-              <button
-                onClick={toggleDarkMode}
-                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Toggle dark mode"
-              >
-                {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
-              <button
-                onClick={() => navigate(`/support/${record.id}/edit`)}
-                className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-colors"
-                aria-label="Edit record"
-              >
-                <Edit size={20} />
-              </button>
-            </div>
-          </div>
-
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold mb-2">
-                {record.deceased_name}
-              </h1>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                    record.death_type === "local"
-                      ? "bg-green-500 text-white"
-                      : "bg-purple-500 text-white"
-                  }`}
-                >
-                  {record.death_type === "local" ? (
-                    <>
-                      <MapPin size={12} className="mr-1" /> Local Death
-                    </>
-                  ) : (
-                    <>
-                      <Users size={12} className="mr-1" /> External Death
-                    </>
-                  )}
-                </span>
-                {record.relationship && (
-                  <span className="text-blue-100 text-sm">
-                    Relation: {record.relationship}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <div className="text-blue-100 text-xs mb-1">Progress</div>
-                <div className="text-2xl font-bold">
-                  {paidfamilies}/{totalfamilies}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
-        {/* Desktop Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Left Column - Stats & Details */}
-          <div className="lg:col-span-1 space-y-6">
-            {/* Summary Stats */}
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-                    <DollarSign
-                      size={20}
-                      className="text-blue-600 dark:text-blue-400"
-                    />
-                  </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Amount/Family
-                  </div>
-                </div>
-                <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                  {formatCurrency(record.amount_per_member)}
-                </div>
-              </div>
+      <main className="max-w-6xl mx-auto px-4 sm:px-8 pb-12">
 
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-lg border border-gray-200 dark:border-gray-700 hover:shadow-xl transition-shadow">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
-                    <TrendingUp
-                      size={20}
-                      className="text-green-600 dark:text-green-400"
-                    />
-                  </div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Collected
-                  </div>
-                </div>
-                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
-                  {formatCurrency(totalCollected)}
-                </div>
-                <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  of {formatCurrency(totalExpected)}
-                </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mt-2">
-                  <div
-                    className="bg-green-500 dark:bg-green-400 h-2 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${(totalCollected / totalExpected) * 100}%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
+        {record.pay_from_account ? (
+          <div className="flex flex-col items-center justify-center py-32 gap-4">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+              <Users size={28} className="text-blue-500" />
             </div>
-
-            {/* Details Card */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Calendar size={20} className="text-gray-400" />
-                Details
-              </h2>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Family Name
-                  </span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
-                    {record.family_name}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Recorded By
-                  </span>
-                  <span className="font-semibold text-gray-900 dark:text-white">
-                    {record.recorded_by_name}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    Created
-                  </span>
-                  <span className="font-medium text-gray-900 dark:text-white text-sm">
-                    {formatDate(record.created_at)}
-                  </span>
-                </div>
-
-                {record.paid_at && (
-                  <div className="flex items-center justify-between py-3">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      Completed On
-                    </span>
-                    <span className="font-medium text-green-700 dark:text-green-400 text-sm">
-                      {formatDate(record.paid_at)}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Notes */}
-            {record.notes && (
-              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-                <div className="flex items-start gap-2 mb-3">
-                  <FileText size={18} className="text-gray-400 mt-0.5" />
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Notes
-                  </h2>
-                </div>
-                <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {record.notes}
-                </p>
-              </div>
-            )}
-
-            {/* Generate PDF Button */}
-            <button
-              onClick={handlePdf}
-              disabled={generatingPdf}
-              className="w-full bg-linear-to-r from-purple-600 to-purple-700 dark:from-purple-700 dark:to-purple-800 text-white rounded-xl p-4 shadow-lg hover:from-purple-700 hover:to-purple-800 dark:hover:from-purple-800 dark:hover:to-purple-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-95"
-            >
-              <div className="flex items-center justify-center gap-3">
-                {generatingPdf ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
-                    <span className="font-semibold">Generating PDF...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download size={20} />
-                    <span className="font-semibold">Download PDF Report</span>
-                  </>
-                )}
-              </div>
-              <p className="text-purple-100 text-xs mt-1">
-                Printable record for offline use
-              </p>
-            </button>
+            <p className="text-sm text-gray-400 dark:text-gray-500">Paid from community account</p>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-6">
 
-          {/* Right Column - Families List */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Filters */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <Filter size={20} className="text-gray-400" />
-                  <span className="text-gray-900 dark:text-white font-semibold">
-                    Filter Families
-                    {paymentFilter !== "all" && (
-                      <span className="ml-2 text-sm text-blue-600 dark:text-blue-400">
-                        ({paymentFilter})
-                      </span>
-                    )}
+            {/* ─── Sidebar ─── */}
+            <aside className="space-y-4">
+
+              {/* Identity */}
+              <div className={`${card} p-5`}>
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-snug tracking-tight">
+                    {record.deceased_name}
+                  </h1>
+                  <span className={`mt-0.5 shrink-0 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                    record.death_type === "local"
+                      ? "bg-teal-50 dark:bg-teal-900/25 text-teal-600 dark:text-teal-400"
+                      : "bg-violet-50 dark:bg-violet-900/25 text-violet-600 dark:text-violet-400"
+                  }`}>
+                    {record.death_type === "local" ? <MapPin size={9} /> : <Users size={9} />}
+                    {record.death_type === "local" ? "Local" : "External"}
                   </span>
                 </div>
-                <ChevronDown
-                  size={20}
-                  className={`text-gray-400 transition-transform ${
-                    showFilters ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              {showFilters && (
-                <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Search by Name
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Enter family name..."
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Payment Status
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
-                      <button
-                        onClick={() => setPaymentFilter("all")}
-                        className={`py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-                          paymentFilter === "all"
-                            ? "bg-blue-600 text-white shadow-lg"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                        }`}
-                      >
-                        All ({families.length})
-                      </button>
-                      <button
-                        onClick={() => setPaymentFilter("paid")}
-                        className={`py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-                          paymentFilter === "paid"
-                            ? "bg-green-600 text-white shadow-lg"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                        }`}
-                      >
-                        Paid ({paidfamilies})
-                      </button>
-                      <button
-                        onClick={() => setPaymentFilter("unpaid")}
-                        className={`py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-                          paymentFilter === "unpaid"
-                            ? "bg-orange-600 text-white shadow-lg"
-                            : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
-                        }`}
-                      >
-                        Unpaid ({totalfamilies - paidfamilies})
-                      </button>
+                {record.relationship && (
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
+                    Relation: {record.relationship}
+                  </p>
+                )}
+                <div className="space-y-0 divide-y divide-gray-100 dark:divide-gray-800">
+                  {[
+                    { label: "Family",     value: record.name },
+                    { label: "Created by", value: record.created_by_name },
+                    { label: "Created",    value: formatDate(record.created_at) },
+                    ...(record.paid_at ? [{ label: "Completed", value: formatDate(record.paid_at), green: true }] : []),
+                  ].map(({ label, value, green }) => (
+                    <div key={label} className="flex items-center justify-between py-2.5 border-0">
+                      <span className="text-xs text-gray-400 dark:text-gray-500">{label}</span>
+                      <span className={`text-xs font-semibold ${green ? "text-emerald-600 dark:text-emerald-400" : "text-gray-700 dark:text-gray-300"}`}>
+                        {value}
+                      </span>
                     </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className={`${card} p-4`}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1.5">Per family</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">{fmt(record.amount_per_family)}</p>
+                </div>
+                <div className={`${card} p-4`}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-1.5">Progress</p>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">
+                    {paid}<span className="text-gray-400 dark:text-gray-600 font-normal"> / {total}</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Collection */}
+              <div className={`${card} p-5`}>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Collection</span>
+                  <span className="text-xs font-bold text-gray-800 dark:text-gray-200">{pct}%</span>
+                </div>
+                <div className="w-full h-1 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden mb-3">
+                  <div className="h-full bg-emerald-500 rounded-full transition-all duration-700" style={{ width: `${pct}%` }} />
+                </div>
+                <div className="flex justify-between">
+                  <div>
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">Collected</p>
+                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{fmt(collected)}</p>
                   </div>
+                  <div className="text-right">
+                    <p className="text-[10px] text-gray-400 dark:text-gray-500 mb-0.5">Expected</p>
+                    <p className="text-sm font-bold text-gray-700 dark:text-gray-300">{fmt(expected)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes */}
+              {record.notes && (
+                <div className={`${card} p-5`}>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">Notes</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{record.notes}</p>
                 </div>
               )}
-            </div>
 
-            {/* Families List */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  Family Payment Status
-                </h2>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
-                  {filteredfamilies?.length} family
-                  {filteredfamilies?.length !== 1 ? "s" : ""}
-                </div>
+              {/* PDF download */}
+              <button onClick={handlePdf} disabled={generatingPdf}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-100 transition-colors disabled:opacity-40 shadow-sm">
+                {generatingPdf
+                  ? <><div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> Generating…</>
+                  : <><Download size={14} /> Download PDF</>}
+              </button>
+            </aside>
+
+            {/* ─── Main panel ─── */}
+            <div className="space-y-4">
+
+              {/* Filters */}
+              <div className={`${card} overflow-hidden`}>
+                <button onClick={() => setShowFilters(!showFilters)}
+                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 dark:hover:bg-[#1f1f23] transition-colors">
+                  <span className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <Filter size={14} className="text-gray-400" />
+                    Filter
+                    {paymentFilter !== "all" && (
+                      <span className="text-xs font-normal text-gray-400 dark:text-gray-500 capitalize">· {paymentFilter}</span>
+                    )}
+                  </span>
+                  <ChevronDown size={14} className={`text-gray-400 transition-transform duration-200 ${showFilters ? "rotate-180" : ""}`} />
+                </button>
+
+                {showFilters && (
+                  <div className="px-5 pb-5 space-y-4 border-t border-gray-100 dark:border-gray-800 pt-4">
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">Search</label>
+                      <input type="text" placeholder="Search by name…" value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full px-4 py-2.5 text-sm rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-600 outline-none focus:ring-2 focus:ring-blue-500/30 transition" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2">Status</label>
+                      <div className="flex gap-2">
+                        {[
+                          { key: "all",    label: "All",    count: total },
+                          { key: "paid",   label: "Paid",   count: paid },
+                          { key: "unpaid", label: "Unpaid", count: total - paid },
+                        ].map(({ key, label, count }) => (
+                          <button key={key} onClick={() => setPaymentFilter(key)}
+                            className={`flex-1 py-2 rounded-xl text-xs font-semibold transition-all ${
+                              paymentFilter === key
+                                ? key === "paid"
+                                  ? "bg-emerald-500 text-white"
+                                  : key === "unpaid"
+                                  ? "bg-amber-500 text-white"
+                                  : "bg-gray-900 dark:bg-white text-white dark:text-gray-900"
+                                : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                            }`}>
+                            {label} <span className="opacity-60">({count})</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {filteredfamilies?.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Users
-                      size={32}
-                      className="text-gray-400 dark:text-gray-500"
-                    />
-                  </div>
-                  <p className="text-gray-500 dark:text-gray-400 font-medium">
-                    No families found
-                  </p>
-                  <p className="text-gray-400 dark:text-gray-500 text-sm mt-1">
-                    Try adjusting your filters
-                  </p>
+              {/* Families table */}
+              <div className={`${card} overflow-hidden`}>
+                <div className="flex items-center justify-between px-5 py-4">
+                  <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-100">Family payment status</h2>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">{filtered?.length} {filtered?.length === 1 ? "family" : "families"}</span>
                 </div>
-              ) : (
-                <>
-                  {/* Table */}
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Family Name
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                            Action
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                        {paginatedfamilies?.map((family) => (
-                          <tr
-                            key={family.id}
-                            className={`transition-colors ${
-                              family.status === "paid"
-                                ? "bg-emerald-50/50 dark:bg-emerald-900/10"
-                                : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                            }`}
-                          >
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                {family.family_name}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {family.status === "paid" ? (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                                  <CheckCircle size={14} />
-                                  Paid
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                                  <Clock size={14} />
-                                  Pending
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-right">
-                              <div className="flex items-center justify-end gap-2">
+
+                {filtered?.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 gap-3 border-t border-gray-100 dark:border-gray-800">
+                    <div className="w-12 h-12 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                      <Users size={20} className="text-gray-400" />
+                    </div>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">No families match your filters</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className=" border-gray-100 dark:border-gray-800  dark:bg-[#111113]">
+                            <th className="px-5 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500 w-1/2">
+                              Family
+                            </th>
+                            <th className="px-5 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                              Status
+                            </th>
+                            <th className="px-5 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                              Action
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginated?.map((family) => (
+                            <tr key={family.id}
+                              className={` border-gray-100 dark:border-gray-800/80 last:border-0 transition-colors ${
+                                family.status === "paid"
+                                  ? "bg-emerald-50/50 dark:bg-emerald-950/15"
+                                  : "hover:bg-gray-50/80 dark:hover:bg-[#1c1c20]"
+                              }`}>
+                              <td className="px-5 py-3.5">
+                                <span className="text-sm font-medium text-gray-800 dark:text-gray-200">{family.name}</span>
+                              </td>
+                              <td className="px-5 py-3.5">
+                                {family.status === "paid" ? (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                                    <CheckCircle size={11} /> Paid
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-amber-100 dark:bg-amber-900/25 text-amber-700 dark:text-amber-400">
+                                    <Clock size={11} /> Pending
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-5 py-3.5 text-right">
                                 {family.status !== "paid" ? (
-                                  <button
-                                    onClick={() =>
-                                      handleMarkAsPaid(
-                                        family.id,
-                                        family.payment_id,
-                                      )
-                                    }
+                                  <button onClick={() => handleMarkAsPaid(family.id, family.payment_id)}
                                     disabled={processingPayment === family.id}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-blue-600 to-indigo-600 dark:from-blue-700 dark:to-indigo-700 text-white rounded-lg font-medium text-sm hover:from-blue-700 hover:to-indigo-700 dark:hover:from-blue-800 dark:hover:to-indigo-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md active:scale-95"
-                                  >
-                                    {processingPayment === family.id ? (
-                                      <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        <span>Processing...</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Check size={16} />
-                                        <span>Mark as Paid</span>
-                                      </>
-                                    )}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-100 transition-colors disabled:opacity-40">
+                                    {processingPayment === family.id
+                                      ? <><div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> Processing</>
+                                      : <><Check size={12} /> Mark paid</>}
                                   </button>
                                 ) : (
-                                  <button
-                                    onClick={() =>
-                                      handleCancelPayment(
-                                        family.id,
-                                        family.payment_id,
-                                      )
-                                    }
+                                  <button onClick={() => handleCancelPayment(family.id, family.payment_id)}
                                     disabled={processingPayment === family.id}
-                                    className="inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-red-600 to-rose-600 dark:from-red-700 dark:to-rose-700 text-white rounded-lg font-medium text-sm hover:from-red-700 hover:to-rose-700 dark:hover:from-red-800 dark:hover:to-rose-800 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm hover:shadow-md active:scale-95"
-                                  >
-                                    {processingPayment === family.id ? (
-                                      <>
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        <span>Cancelling...</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <X size={16} />
-                                        <span>Cancel Payment</span>
-                                      </>
-                                    )}
+                                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors disabled:opacity-40">
+                                    {processingPayment === family.id
+                                      ? <><div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> Cancelling</>
+                                      : <><X size={12} /> Cancel</>}
                                   </button>
                                 )}
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
 
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30">
-                      <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          Showing {startIndex + 1}-
-                          {Math.min(
-                            startIndex + itemsPerPage,
-                            filteredfamilies?.length,
-                          )}{" "}
-                          of {filteredfamilies?.length}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() =>
-                              setCurrentPage((prev) => Math.max(prev - 1, 1))
-                            }
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between px-5 py-3 border-t border-gray-100 dark:border-gray-800  dark:bg-[#111113]">
+                        <span className="text-xs text-gray-400 dark:text-gray-500">
+                          {startIndex + 1}–{Math.min(startIndex + itemsPerPage, filtered?.length)} of {filtered?.length}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                             disabled={currentPage === 1}
-                            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
-                            aria-label="Previous page"
-                          >
-                            <ChevronLeft size={20} />
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800 disabled:opacity-30 transition-colors">
+                            <ChevronLeft size={15} />
                           </button>
-                          <span className="text-sm font-medium px-4 text-gray-900 dark:text-white min-w-20 text-center">
-                            Page {currentPage} of {totalPages}
+                          <span className="text-xs font-medium text-gray-500 dark:text-gray-400 min-w-15 text-center">
+                            {currentPage} / {totalPages}
                           </span>
-                          <button
-                            onClick={() =>
-                              setCurrentPage((prev) =>
-                                Math.min(prev + 1, totalPages),
-                              )
-                            }
+                          <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
                             disabled={currentPage === totalPages}
-                            className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-700 dark:text-gray-300"
-                            aria-label="Next page"
-                          >
-                            <ChevronRight size={20} />
+                            className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-800 disabled:opacity-30 transition-colors">
+                            <ChevronRight size={15} />
                           </button>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </>
-              )}
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        )}
+      </main>
 
       {isModalOpen && (
-        <PaymentModal data={data} isOpen={isModalOpen} onClose={closeModal} />
+        <PaymentModal data={data} isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       )}
     </div>
   );

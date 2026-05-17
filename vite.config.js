@@ -13,8 +13,10 @@ export default defineConfig({
     },
   },
   server: {
-    // host: '0.0.0.0',
-    host: '127.0.0.1',
+    host: '0.0.0.0',
+    // host: '192.168.0.188',
+    // host: '192.168.100.33',
+    // https: true,
     port: 5173,
   },
 

@@ -1,9 +1,22 @@
 @import "tailwindcss";
 
+html,
+body,
+#root {
+  height: 100%;
+}
+@keyframes wave {
+  0%, 100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.5);
+  }
+}
 @theme inline {
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-  
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
   /* Dark theme inspired by Vercel/Figma */
   --color-background: #0a0a0b;
   --color-foreground: #fafafa;
@@ -20,7 +33,7 @@
   --color-border: #27272a;
   --color-input: #27272a;
   --color-ring: #0070f3;
-  
+
   /* Status colors */
   --color-success: #22c55e;
   --color-success-foreground: #ffffff;
@@ -28,7 +41,7 @@
   --color-warning-foreground: #ffffff;
   --color-error: #ef4444;
   --color-error-foreground: #ffffff;
-  
+
   --radius: 0.75rem;
 }
 
@@ -44,23 +57,41 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
+/* For Webkit browsers (Chrome, Safari, Edge) */
+.scrollbar-hide {
+  -ms-overflow-style: none;   /* IE */
+  scrollbar-width: none;      /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;              /* Chrome/Safari */
+}
+.scrollbar-custom::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--color-background);
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-muted);
-  border-radius: 4px;
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-muted-foreground);
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Dark mode styles */
+.dark .scrollbar-custom::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 /* Focus styles */
@@ -74,7 +105,39 @@ body {
   background-color: var(--color-primary);
   color: var(--color-primary-foreground);
 }
+@layer base {
+  body {
+    @apply antialiased;
+  }
+}
 
+/* True dark mode */
+.dark {
+  color-scheme: dark;
+  background-color: #111827; /* gray-900 */
+}
+
+.dark body {
+  @apply bg-gray-900;
+}
+
+/* Custom scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  @apply bg-gray-800;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
 
 /* Add to your global CSS or component styles */
 @keyframes slideDown {
@@ -90,4 +153,15 @@ body {
 
 .map-dropdown {
   animation: slideDown 0.2s ease-out;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@keyframes slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
 }

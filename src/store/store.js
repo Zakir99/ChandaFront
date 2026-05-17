@@ -1,16 +1,17 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
-// import userSessionReducer from './userSessionSlice';
-// import sessionAuthReducer from './SessionAuth';
-// import schoolReducer from './SchoolSlice';
+// import familyReducer from './FamilySlice';
+import socketReducer from './slices/socketSlice';
+import { socketMiddleware } from './middleware/socketMiddleware';
 
-const store = configureStore({
+export const store = configureStore({
   reducer: {
     auth: authReducer,
-    // userSessions: userSessionReducer,
-    // sessionAuth: sessionAuthReducer,
-    // school: schoolReducer,
+    // family: familyReducer,
+    socket: socketReducer,
   },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(socketMiddleware),
 });
 
 export default store;
